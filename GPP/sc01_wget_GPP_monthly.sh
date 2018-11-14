@@ -1,6 +1,8 @@
 #This script is to download monthly GPP (0.05 degree) from the Zhang et al 2017 publication.
 #It also changes the no data value from infinite to -9999
 
+
+
 cd /project/fas/powell/esp38/dataproces/MOSQLAND/consland/GPP/mnth
 wget https://ndownloader.figshare.com/files/8945542
 7za x 8945542
