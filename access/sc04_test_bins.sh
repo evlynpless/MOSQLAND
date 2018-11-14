@@ -5,17 +5,16 @@
 #SBATCH -t 4:00:00                                                                              
 #SBATCH --mail-type=ALL                                                                         
 #SBATCH --mail-user=evlyn.pless@yale.edu                                                        
-#SBATCH -o  /gpfs/scratch60/fas/powell/esp38/stdout/sc04_test_bins_B.sh.%J.out                    
-#SBATCH -e  /gpfs/scratch60/fas/powell/esp38/stderr/sc04_test_bins_B.sh.%J.err                   \
+#SBATCH -o  /gpfs/scratch60/fas/powell/esp38/stdout/sc04_test_bins.sh.%J.out                    
+#SBATCH -e  /gpfs/scratch60/fas/powell/esp38/stderr/sc04_test_bins.sh.%J.err                   \
                                                                                                 
-##   sbatch  ~/scripts/MOSQLAND/sc04_test_bins_B.sh 
+##   sbatch  ~/scripts/MOSQLAND/sc04_test_bins.sh 
 
 cd /project/fas/powell/esp38/dataproces/MOSQLAND/consland/access/Florida_clips
 
 
-echo 100 10 8  4  ex      > weight.txt
-echo 2   4  2  1  pa    >> weight.txt
-echo 2   3  4  5  lin >> weight.txt
+echo 100 10 8  ex      > weight.txt
+echo 4   2  1  pa    >> weight.txt
 
 
 
@@ -23,17 +22,14 @@ export min=$(pkstat -nodata -999 -mm -i   accessibility_to_cities_2015_v1.0_Flor
 export binrange=$(pkstat -nodata -999 -mm -i  accessibility_to_cities_2015_v1.0_FloridaClip.tif    | awk '{ print ($4-$2) / 3   }' )
 
 
-cat weight.txt | xargs -n 5 -P 2 bash -c $' 
+cat weight.txt | xargs -n 4 -P 2 bash -c $' 
 
 pkgetmask    -min $min                                  -max $(echo   $min + $binrange       | bc )  -data $1  -nodata 0  -co COMPRESS=DEFLATE -co ZLEVEL=9 -i accessibility_to_cities_2015_v1.0_FloridaClip.tif  -o input${1}_a.tif 
 pkgetmask    -min $(echo  $min + $binrange       | bc ) -max $(echo   $min + $binrange "*" 2 | bc )  -data $2  -nodata 0  -co COMPRESS=DEFLATE -co ZLEVEL=9 -i accessibility_to_cities_2015_v1.0_FloridaClip.tif  -o input${2}_b.tif 
 pkgetmask    -min $(echo  $min + $binrange "*" 2 | bc ) -max $(echo   $min + $binrange "*" 3 | bc )  -data $3  -nodata 0  -co COMPRESS=DEFLATE -co ZLEVEL=9 -i accessibility_to_cities_2015_v1.0_FloridaClip.tif  -o input${3}_c.tif 
-pkgetmask    -min $(echo  $min + $binrange "*" 3 | bc ) -max $(echo   $min + $binrange "*" 4 | bc )  -data $4  -nodata 0  -co COMPRESS=DEFLATE -co ZLEVEL=9 -i accessibility_to_cities_2015_v1.0_FloridaClip.tif  -o input${4}_d.tif 
 
-gdalbuildvrt -separate  input$5.vrt    input${1}_a.tif    input${2}_b.tif   input${3}_c.tif   input${4}_d.tif
+gdalbuildvrt -separate  input$4.vrt    input${1}_a.tif    input${2}_b.tif   input${3}_c.tif 
 
-pkstatprofile  -f max  -i  input$5.vrt  -o  input${5}_max.tif
+pkstatprofile  -f max  -i  input$4.vrt  -o  input${4}_max.tif
 
 ' _ 
-
-#this is to test what happens when two input files have the same name
