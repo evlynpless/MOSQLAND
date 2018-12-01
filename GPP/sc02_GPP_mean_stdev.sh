@@ -1,23 +1,22 @@
 #!/bin/bash
-#SBATCH -p scavenge
+#SBATCH -p day
 #SBATCH -N 1
-#SBATCH -c 1
-#SBATCH -t 4:00:00
+#SBATCH -c 12
+#SBATCH -t 24:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
 #SBATCH -o  /gpfs/scratch60/fas/powell/esp38/stdout/sc09_GPP_mean_stdev.sh.%J.out
 #SBATCH -e  /gpfs/scratch60/fas/powell/esp38/stderr/sc09_GPP_mean_stdev.sh.%J.err
 
-##   sbatch  ~/scripts/MOSQLAND/sc09_GPP_mean_stdev.sh  
+##   sbatch  ~/scripts/MOSQLAND/GPP/sc02_GPP_mean_stdev.sh  
 
 #Corner coordinates have been checked already
 #This code is to create a monthly averages for our GPP data across the years 2000-2016. 
 
-INDIR=/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GPP/mnth/monthly
+export INDIR=/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GPP/mnth/monthly
 
- 
-
-for month in 01 02 03 04 05 06 07 08 09 10 11 12 ; do 
+echo  01 02 03 04 05 06 07 08 09 10 11 12 | xargs -n 1 -P 12 bash -c $'  
+month=$1
 #Create a multiband vrt 
 gdalbuildvrt -overwrite -separate ${INDIR}_proces/GPP.VPM.M${month}.v20.CMG.vrt  $INDIR/GPP.VPM.*.M${month}.v20.CMG.tif 
 
@@ -30,7 +29,7 @@ gdal_translate -a_srs EPSG:4326 -nodata -9999 -b 1 -co COMPRESS=LZW ${INDIR}_pro
 
 gdal_translate -a_srs EPSG:4326 -nodata -9999 -b 2 -co COMPRESS=LZW ${INDIR}_proces/GPP.VPM.mean_stdev.M${month}.v20.CMG.tif  ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif
 
-done 
+' _ 
 
 
 #for month in 01 02 03 04 05 06 07 08 09 10 11 12 ; do 
