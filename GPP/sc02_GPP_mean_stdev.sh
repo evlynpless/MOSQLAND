@@ -25,13 +25,13 @@ pkstatprofile -co  COMPRESS=LZW -nodata -9999 -f mean -f stdev  -i ${INDIR}_proc
 
 echo split tif uniq band 
 
-gdal_translate -a_srs EPSG:4326 -nodata -9999 -b 1 -co COMPRESS=LZW ${INDIR}_proces/GPP.VPM.mean_stdev.M${month}.v20.CMG.tif  ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
+gdal_translate -a_srs EPSG:4326 -a_nodata -9999 -b 1 -co COMPRESS=LZW ${INDIR}_proces/GPP.VPM.mean_stdev.M${month}.v20.CMG.tif  ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
 
-gdal_translate -a_srs EPSG:4326 -nodata -9999 -b 2 -co COMPRESS=LZW ${INDIR}_proces/GPP.VPM.mean_stdev.M${month}.v20.CMG.tif  ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif
+gdal_translate -a_srs EPSG:4326 -a_nodata -9999 -b 2 -co COMPRESS=LZW ${INDIR}_proces/GPP.VPM.mean_stdev.M${month}.v20.CMG.tif  ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif
 
 ' _ 
 
-
+#is this part necessary?
 #for month in 01 02 03 04 05 06 07 08 09 10 11 12 ; do 
 
 #gdal_edit.py -a_srs EPSG:4326 -a_nodata -9999 ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
