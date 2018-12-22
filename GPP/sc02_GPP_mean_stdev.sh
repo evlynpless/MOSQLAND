@@ -32,14 +32,14 @@ gdal_translate -a_srs EPSG:4326 -a_nodata -9999 -b 2 -co COMPRESS=LZW ${INDIR}_p
 ' _ 
 
 #is this part necessary?
-#for month in 01 02 03 04 05 06 07 08 09 10 11 12 ; do 
+for month in 01 02 03 04 05 06 07 08 09 10 11 12 ; do 
 
-#gdal_edit.py -a_srs EPSG:4326 -a_nodata -9999 ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
+gdal_edit.py -a_srs EPSG:4326 -a_nodata -9999 ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
 
-#gdal_edit.py -a_nodata -9999 ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
+gdal_edit.py -a_nodata -9999 ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif
 
-#pksetmask   -co COMPRESS=DEFLATE -co ZLEVEL=9  -m ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif -msknodata -9999 -p '='  -nodata -9999 -i ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif  -o ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG_nodata.tif
+pksetmask   -co COMPRESS=DEFLATE -co ZLEVEL=9  -m ${INDIR}_mean/GPP.VPM.mean.M${month}.v20.CMG.tif -msknodata -9999 -p '='  -nodata -9999 -i ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif  -o ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG_nodata.tif
 
-#mv ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG_nodata.tif ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif
+mv ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG_nodata.tif ${INDIR}_stdev/GPP.VPM.stdev.M${month}.v20.CMG.tif
 
-#done 
+done 
