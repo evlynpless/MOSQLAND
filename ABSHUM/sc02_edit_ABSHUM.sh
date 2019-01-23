@@ -1,3 +1,4 @@
+#test
 cd /project/fas/powell/esp38/dataproces/MOSQLAND/consland/ABSHUM
 
 OUTDIR=/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ABSHUM/Florida_clips
