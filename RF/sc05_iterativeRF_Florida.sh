@@ -8,8 +8,14 @@
 #SBATCH --mail-user=email                                
 #SBATCH --job-name=sc05_iterativeRF_Florida.sh                     
 
+
+# sbatch   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc05_iterativeRF_Florida.sh  
+
+
 module load Apps/R/3.3.2-generic
 
 module load Rpkgs/RGDAL/1.2-5
 
-R --slave -f  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc05_iterativeRF_Florida.R  
+R --vanilla -no-readline -q  -f  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc06_iterativeRF_Florida.R  
+
+

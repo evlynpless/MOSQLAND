@@ -20,7 +20,7 @@ crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coo
 
 #Add a loop that will make FST_list_Florida_reorder.csv from FL_points_list.csv??
 
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FST_list_Florida_reorder.csv", sep=",", header=T) 
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/FST_list_NAmRF1.csv", sep=",", header=T) 
 
 #create dataframes of begin and end coordinates from a file:
 begin.table <- G.table[,c(4,3)]
@@ -41,34 +41,34 @@ proj4string(spatial.p) <- crs.geo  # define projection system of our data
 #Create raster stack 
 ###############################################
 
-arid = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/Florida_clips/AI_annual_FloridaClip.tif")
+arid = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/NAm_clip/AI_annual_NAmClip.tif")
 proj4string(arid) <- crs.geo
 
-access = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/access/Florida_clips/accessibility_to_cities_2015_v1.0_FloridaClip.tif")
+access = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/access/NAm_clip/accessibility_to_cities_2015_v1.0_NAmClip.tif") #corners aren't perfect
 proj4string(access) <- crs.geo
 
-prec = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chelsa/bio12/Florida_clips/bio12_mean_FloridaClip.tif")
+prec = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chelsa/bio12/NAm_clip/bio12_mean_NAClip.tif")
 proj4string(prec) <- crs.geo
 
-mean.temp = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chelsa/bio1/Florida_clips/bio1_mean_FloridaClip.tif")
+mean.temp = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chelsa/bio1/NAm_clip/bio1_NAmClip.tif.tif")
 proj4string(mean.temp) <- crs.geo
 
-human.density = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GSHL/Florida_clips/GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_FloridaClip.tif")
+human.density = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GSHL/NAm_clip/GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_NAmClip.tif")
 proj4string(human.density) <- crs.geo
 
-crop = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/Florida_clips/consensus_full_class_7_FloridaClip.tif")
+crop = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_7_NAmClip.tif")
 proj4string(crop) <- crs.geo
 
-urban = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/Florida_clips/consensus_full_class_9_FloridaClip.tif")
+urban = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_9_NAmClip.tif")
 proj4string(urban) <- crs.geo
 
-friction = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/friction/Florida_Clips/friction_surface_2015_v1.0_FloridaClip.tif")
+friction = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/friction/NAm_clip/friction_surface_2015_v1.0_NAmClip.tif")
 proj4string(friction) <- crs.geo
 
-min.temp = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chelsa/bio6/bio6_mean_FloridaClip.tif")
+min.temp = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chelsa/bio6/NAm_clip/bio6_mean_NAmClip.tif")
 proj4string(friction) <- crs.geo
 
-ABSHUM = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ABSHUM/Florida_clips/ABS50_res_FloridaClip.tif")
+ABSHUM = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ABSHUM/NAm_clip/ABS50_res_NAmClip.tif")
 proj4string(friction) <- crs.geo
 
 env=stack(arid, access, prec, mean.temp, human.density, crop, urban, friction, min.temp, ABSHUM)
@@ -106,7 +106,7 @@ StraightPred[is.na(StraightPred[])] <- 0.4 #can delete after Florida Keys highwa
 pred.cond <- 1/StraightPred #build conductance surface
 
 #Prepare points for use in least cost path loops
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL_points_list.csv", sep=",", header=T)
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAmRF1_points_list.csv", sep=",", header=T)
 G.coordinates1 <- G.table[,c(3,2)]
 G.points <- SpatialPoints(G.table[,c(3,2)])  # ... converted into a spatial object
 proj4string(G.points) <- crs.geo  
@@ -146,7 +146,7 @@ for (it in 1:2) {
   print("round done")
 }
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/image.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/image.RData")
 
 test = summary(LCP_RF)
 
