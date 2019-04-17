@@ -18,7 +18,7 @@ crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coo
 
 #Plot straigt lines for first iteration of RF
 
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/FST_list_NAmRF1.csv", sep=",", header=T) 
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/FST_list_NAmRF1_noKeys.csv", sep=",", header=T) 
 
 #create dataframes of begin and end coordinates from a file:
 begin.table <- G.table[,c(4,3)]
@@ -84,7 +84,7 @@ names(env) [10] <- "ABSHUM"
 
 print("raster stack done")
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/NAmRasterStack.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/sc08A_NAmRasterStack.RData")
 
 
 ########################################
@@ -107,15 +107,13 @@ print("Straight_RF done")
 
 StraightPred <- predict(env, Straight_RF)
 
-StraightPred[is.na(StraightPred[])] <- 0.4 #can delete after Florida Keys highway is added
+pred.cond <- 1/StraightPred
 
-pred.cond <- 1/StraightPred #build conductance surface
-
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/StraightRFDone.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/sc08A_StraightRFDone.RData")
 
 
 #Prepare points for use in least cost path loops
-P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/NAmRF1_points_list.csv", sep=",", header=T)
+P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_1/NAmRF1_points_list_noKeys.csv", sep=",", header=T)
 P.coordinates1 <- P.table[,c(3,2)]
 P.points <- SpatialPoints(P.table[,c(3,2)])  # ... converted into a spatial object
 proj4string(P.points) <- crs.geo  
@@ -130,8 +128,8 @@ for (it in 1:2) {
   trNAm1C <- geoCorrection(trNAm1, type="c") 
 
   AtoT <- shortestPath(trNAm1C, P.points[1,], P.points[1,], output="SpatialLines")
-  for (x in 1:36) {  
-    for (y in (x+1):37) { 
+  for (x in 1:33) {  
+    for (y in (x+1):34) { 
      Ato <- shortestPath(trNAm1C, P.points[x,], P.points[y,], output="SpatialLines")
      AtoT <- AtoT + Ato  
      assign(paste0("Ato_px",x,"_py",y,"_it",it) , Ato)
@@ -149,10 +147,8 @@ for (it in 1:2) {
   LCP_RF = randomForest(FST_arl ~  arid +   access + prec  +   mean.temp  +   human.density  +   crop   +    urban  +   friction + min.temp + ABSHUM, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
 
   pred = predict(env, LCP_RF)
-  
-  pred[is.na(pred[])] <- 0.4
-  
-  pred.cond <- 1/pred 
+
+  pred.cond <- 1/pred
   
   print("round done")
 }

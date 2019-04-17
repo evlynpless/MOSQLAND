@@ -39,7 +39,8 @@ print("spatial lines done")
 #Create raster stack 
 ###############################################
 
-arid = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/Florida_clips/AI_annual_FloridaClip.tif")
+aridI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/Florida_clips/AI_annual_FloridaClip.tif")
+arid = aridI*1
 proj4string(arid) <- crs.geo
 
 accessI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/access/Florida_clips/accessibility_to_cities_2015_v1.0_FloridaClip.tif")
@@ -93,6 +94,9 @@ names(env) [10] <- "ABSHUM"
 
 print("raster stack done")
 
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/sc05C_sc06C_rasterstack_image.RData")
+
+
 ########################################
 #Calculate mean of straight lines and making initial RF model
 #######################################
@@ -107,7 +111,9 @@ StraightMeanDF$FST_arl <- G.table$FST_arl
   
 Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   crop   +    urban  +   friction + min.temp + ABSHUM, importance=TRUE, na.action=na.omit, data=StraightMeanDF)
 
-Straight_RF
+#Straight_RF_text = Straight_RF
+
+#write.csv(Straight_RF_text, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/Straight_RF.csv")
 
 
 StraightPred <- predict(env, Straight_RF)
@@ -137,8 +143,8 @@ for (it in 1:10) {
   for (x in 1:13) {  
     for (y in (x+1):14) { 
      Ato <- shortestPath(trFloridaC, P.points[x,], P.points[y,], output="SpatialLines")
-      AtoT <- AtoT + Ato
-        
+     AtoT <- AtoT + Ato
+     assign(paste0("Ato_p",x,"_it",it) , Ato)   
 
     }
   }
@@ -163,9 +169,12 @@ for (it in 1:10) {
   pred.cond <- 1/pred 
   
   print("round done")
+
 }
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/image.RData")
+#make table of RF variance explained
+
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/sc05C_sc06C.RData")
 
 test = summary(LCP_RF)
 

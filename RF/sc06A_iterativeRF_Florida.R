@@ -18,7 +18,7 @@ crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coo
 
 #Plot straigt lines for first iteration of RF
 
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FST_list_Florida_reorder.csv", sep=",", header=T) 
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FST_list_Florida_reorder_noKeys.csv", sep=",", header=T) 
 
 #create dataframes of begin and end coordinates from a file:
 begin.table <- G.table[,c(4,3)]
@@ -109,17 +109,14 @@ Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +
 
 Straight_RF
 
-
 StraightPred <- predict(env, Straight_RF)
 
 print("first prediction resistance surface done")
 
-StraightPred[is.na(StraightPred[])] <- 0.4 #can delete after Florida Keys highway is added
-
 pred.cond <- 1/StraightPred #build conductance surface
 
 #Prepare points for use in least cost path loops
-P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL_points_list.csv", sep=",", header=T)
+P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL_points_list_noKeys.csv", sep=",", header=T)
 P.coordinates1 <- P.table[,c(3,2)]
 P.points <- SpatialPoints(P.table[,c(3,2)])  # ... converted into a spatial object
 proj4string(P.points) <- crs.geo  
@@ -128,18 +125,16 @@ proj4string(P.points) <- crs.geo
 print("starting loops")
 
 it <- 1
-for (it in 1:10) {
+for (it in 1:8) {
   
   trFlorida <- transition(pred.cond, transitionFunction=mean, directions=8) #make transitional matrix
   trFloridaC <- geoCorrection(trFlorida, type="c") 
 
   AtoT <- shortestPath(trFloridaC, P.points[1,], P.points[1,], output="SpatialLines")
-  for (x in 1:13) {  
-    for (y in (x+1):14) { 
+  for (x in 1:10) {  
+    for (y in (x+1):11) { 
      Ato <- shortestPath(trFloridaC, P.points[x,], P.points[y,], output="SpatialLines")
-      AtoT <- AtoT + Ato
-        
-
+      AtoT <- AtoT + Ato  
     }
   }
   AtoT = (AtoT[-1])
@@ -157,8 +152,6 @@ for (it in 1:10) {
   pred = predict(env, LCP_RF)
 
   assign(paste0("pred", it), pred)
-  
-  pred[is.na(pred[])] <- 0.4
   
   pred.cond <- 1/pred 
   

@@ -1,4 +1,7 @@
-#Building iterative RF model with Florida as test case
+#Iterative RF model for Florida individuals
+#Includes Keys
+#Does not include pairs within cities
+
 
 library("sp")
 library("spatstat")
@@ -9,6 +12,7 @@ library("gdistance")
 library("SDraw")
 library("tidyverse")
 
+setwd("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF")
 crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coordinate system
 
 
@@ -18,7 +22,7 @@ crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coo
 
 #Plot straigt lines for first iteration of RF
 
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FST_list_Florida_reorder.csv", sep=",", header=T) 
+G.table <- read.table(file="FL_indiv_pairs.csv", sep=",", header=T) 
 
 #create dataframes of begin and end coordinates from a file:
 begin.table <- G.table[,c(4,3)]
@@ -34,7 +38,7 @@ p <- psp(begin.table[,1], begin.table[,2], end.table[,1], end.table[,2], owin(ra
 spatial.p <- as(p, "SpatialLines")
 proj4string(spatial.p) <- crs.geo  # define projection system of our data
 
-print("spatial lines done")
+
 ###############################################
 #Create raster stack 
 ###############################################
@@ -78,6 +82,7 @@ ABSHUMI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ABSHUM/
 ABSHUM <- ABSHUMI*1
 proj4string(ABSHUM) <- crs.geo
 
+
 env=stack(arid, access, prec, mean.temp, human.density, crop, urban, friction, min.temp, ABSHUM)
 
 names(env) [1] <- "arid"
@@ -91,7 +96,6 @@ names(env) [8] <- "friction"
 names(env) [9] <- "min.temp"
 names(env) [10] <- "ABSHUM"
 
-print("raster stack done")
 
 ########################################
 #Calculate mean of straight lines and making initial RF model
@@ -100,49 +104,34 @@ StraightMean <- raster::extract(env, spatial.p, fun=mean, na.rm=TRUE)
 
 StraightMeanDF <- as.data.frame(StraightMean)
 
-StraightMeanDF$FST_arl <- G.table$FST_arl
+StraightMeanDF$Wang <- G.table$Wang
 
-#option of trying DPS
-#StraightMeanDF$DPS <- G.table$DPS
-  
-Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   crop   +    urban  +   friction + min.temp + ABSHUM, importance=TRUE, na.action=na.omit, data=StraightMeanDF)
-
-Straight_RF
-
+Straight_RF = randomForest(Wang ~   arid + access  +   prec  +   mean.temp  +   human.density  +   crop   +    urban  +   friction + min.temp + ABSHUM, importance=TRUE, na.action=na.omit, data=StraightMeanDF)
 
 StraightPred <- predict(env, Straight_RF)
-
-print("first prediction resistance surface done")
 
 StraightPred[is.na(StraightPred[])] <- 0.4 #can delete after Florida Keys highway is added
 
 pred.cond <- 1/StraightPred #build conductance surface
 
 #Prepare points for use in least cost path loops
-P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL_points_list.csv", sep=",", header=T)
-P.coordinates1 <- P.table[,c(3,2)]
-P.points <- SpatialPoints(P.table[,c(3,2)])  # ... converted into a spatial object
-proj4string(P.points) <- crs.geo  
-#plot(P.points)
+Coord1 <- G.table[,c(4,3)]
+Coord2 <- G.table[,c(6,5)]
+P.points1 <- SpatialPoints(Coord1, proj4string=crs.geo)
+P.points2 <- SpatialPoints(Coord2, proj4string=crs.geo)
 
-print("starting loops")
 
 it <- 1
-for (it in 1:10) {
+for (it in 1:8) {
   
   trFlorida <- transition(pred.cond, transitionFunction=mean, directions=8) #make transitional matrix
   trFloridaC <- geoCorrection(trFlorida, type="c") 
-
-  AtoT <- shortestPath(trFloridaC, P.points[1,], P.points[1,], output="SpatialLines")
-  for (x in 1:13) {  
-    for (y in (x+1):14) { 
-     Ato <- shortestPath(trFloridaC, P.points[x,], P.points[y,], output="SpatialLines")
-      AtoT <- AtoT + Ato
-        
-
-    }
+  
+  AtoT <- shortestPath(trFloridaC, P.points1[1,], P.points2[1,], output="SpatialLines")
+  for (x in 2:183437) {  
+     Ato <- shortestPath(trFloridaC, P.points1[x,], P.points2[x,], output="SpatialLines")
+      AtoT <- AtoT + Ato  
   }
-  AtoT = (AtoT[-1])
 
   LcpLoop <- raster::extract(env, AtoT, fun=mean, na.rm=TRUE)
 
@@ -150,23 +139,14 @@ for (it in 1:10) {
 
   LcpLoopDF$FST_arl <- G.table$FST_arl
 
-  LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   crop   +    urban  +   friction + min.temp + ABSHUM, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
-
-  assign(paste0("LCP_RF", it), LCP_RF )
+  LCP_RF = randomForest(Wang ~  arid + access  +   prec  +   mean.temp  +   human.density  +   crop   +    urban  +   friction + min.temp + ABSHUM, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
 
   pred = predict(env, LCP_RF)
-
-  assign(paste0("pred", it), pred)
   
   pred[is.na(pred[])] <- 0.4
   
   pred.cond <- 1/pred 
-  
+
   print("round done")
 }
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/image.RData")
-
-test = summary(LCP_RF)
-
-write.csv(test, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/test.csv")
