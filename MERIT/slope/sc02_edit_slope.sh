@@ -29,3 +29,4 @@ gdal_calc.py -A $OUTDIR/slope_1KMmedian_MERIT_FloridaClip.tif  --outfile=$OUTDIR
 
 gdal_translate -of AAIGrid $OUTDIR/slope_1KMmedian_MERIT_FloridaClip_positive.tif $OUTDIR/slope_1KMmedian_MERIT_FloridaClip_positive.asc
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 slope_1KMmedian_MERIT.tif   SW_clip/slope_1KMmedian_MERIT_SWclip.tif

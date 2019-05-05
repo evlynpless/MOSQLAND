@@ -8,3 +8,4 @@ pksetmask -i AI_annual_FloridaClip.tif -m AI_annual_FloridaClip.tif -o AI_annual
 
 gdal_translate -of AAIGrid $OUTDIR/AI_annual_FloridaClip.tif $OUTDIR/AI_annual_FloridaClip.asc
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 AI_annual.tif SW_clip/AI_annual_SWclip.tif

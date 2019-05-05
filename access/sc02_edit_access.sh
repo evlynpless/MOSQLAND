@@ -13,4 +13,5 @@ gdal_translate  -projwin -85 31.5 -79.8 24.0 accessibility_to_cities_2015_v1.0.t
 
 gdal_translate  -projwin -126 40 -57 15 accessibility_to_cities_2015_v1.0_res.tif  /project/fas/powell/esp38/dataproces/MOSQLAND/consland/access/NAm_clip/accessibility_to_cities_2015_v1.0_NAmClip.tif
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7  accessibility_to_cities_2015_v1.0_res.tif    SW_clip/accessibility_to_cities_2015_v1.0_res_SWclip.tif 
 #gdal_translate -of AAIGrid $OUTDIR/accessibility_to_cities_2015_v1.0_FloridaClip.tif $OUTDIR/accessibility_to_cities_2015_v1.0_FloridaClip.asc

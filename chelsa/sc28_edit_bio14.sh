@@ -33,3 +33,5 @@ gdal_translate  -projwin -85 31.5 -79.8 24.0  bio14_mean.tif  $OUTDIR/bio14_mean
 
 #This script is for editing the chelsa version of bio14: precipitation of the driest month
 #It also averages over the years 2000-2013
+
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7  bio14_mean.tif  SW_clip/bio14_mean_SWclip.tif

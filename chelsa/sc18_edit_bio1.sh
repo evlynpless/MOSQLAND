@@ -29,5 +29,7 @@ gdal_edit.py -a_nodata -9999 bio1_mean_FloridaClip.tif
 
 gdal_translate  -projwin -85 31.5 -79.8 24.0  bio1_mean.tif  $OUTDIR/bio1_mean_FloridaClip.tif
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 bio1_mean.tif SW_clip/bio1_mean_SWclip.tif
+
 #This script is for editing the chelsa version of bio1: average annual temperature
 #It also averages over the years 2000-2013

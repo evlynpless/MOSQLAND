@@ -17,3 +17,5 @@ gdal_translate -of AAIGrid GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84.ti
 gdal_calc.py -A  GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_FloridaClip.tif  --outfile=GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_FloridaClip_positive.tif --NoDataValue=-999  --calc="A+0.01"
 
 gdal_translate -of AAIGrid GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_FloridaClip_positive.tif GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_FloridaClip_positive.asc
+
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84.tif SW_clip/GHS_BUILT_LDS2014_GLOBE_R2016A_54009_1k_v1_0_WGS84_SWclip.tif

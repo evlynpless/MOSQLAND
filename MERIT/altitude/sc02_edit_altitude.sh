@@ -22,4 +22,6 @@ pksetmask -i altitude_1KMmedian_MERIT.tif -m altitude_1KMmedian_MERIT.tif -o alt
  
 gdal_translate  -projwin -85 31.5 -79.8 24.0  altitude_1KMmedian_MERIT.tif  $OUTDIR/altitude_1KMmedian_MERIT_FloridaClip.tif
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 altitude_1KMmedian_MERIT.tif   SW_clip/altitude_1KMmedian_MERIT_SWclip.tif
+
 #gdal_translate -of AAIGrid $OUTDIR/altitude_1KMmedian_MERIT_FloridaClip.tif $OUTDIR/altitude_1KMmedian_MERIT_FloridaClip.asc

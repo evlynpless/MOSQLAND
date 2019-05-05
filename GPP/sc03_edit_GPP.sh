@@ -27,3 +27,5 @@ pkstatprofile  -f mean  -i  GPP.vrt  -o  GPP_mean.tif
 gdal_translate  -projwin -85 31.5 -79.8 24.0 -co COMPRESS=DEFLATE -co ZLEVEL=9 -co INTERLEAVE=BAND GPP_mean.tif   $OUTDIR/GPP_mean_Florida_clip.tif                             
 
 #gdal_translate -of AAIGrid $OUTDIR/GPP_mean_Florida_clip.tif  $OUTDIR/GPP_mean_Florida_clip.asc 
+
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7  GPP_mean.tif   SW_clip/GPP_mean_SWclip.tif  

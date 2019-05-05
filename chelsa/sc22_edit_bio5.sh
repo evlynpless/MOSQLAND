@@ -33,3 +33,5 @@ gdal_translate -of AAIGrid bio5_mean_FloridaClip.tif bio5_mean_FloridaClip.asc
 
 #This script is for editing the chelsa version of bio5: max temperature of hottest month
 #It also averages over the years 2000-2013
+
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7  bio5_mean.tif  SW_clip/bio5_mean_SWclip.tif

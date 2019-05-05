@@ -27,6 +27,8 @@ gdal_edit.py -a_nodata -9999 bio7_mean.tif
 
 gdal_translate  -projwin -85 31.5 -79.8 24.0  bio7_mean.tif  $OUTDIR/bio7_mean_FloridaClip.tif
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7  bio7_mean.tif  SW_clip/bio7_mean_SWclip.tif
+
 #gdal_translate -of AAIGrid bio5_mean_FloridaClip.tif bio5_mean_FloridaClip.asc
 
 #This script is for editing the chelsa version of bio7: Temperature Annual Range

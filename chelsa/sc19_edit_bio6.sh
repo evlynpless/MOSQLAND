@@ -35,3 +35,4 @@ gdal_translate -of AAIGrid $OUTDIR/bio6_mean_FloridaClip_positive.tif $OUTDIR/bi
 
 
 #This script is for editing the chelsa version of bio6: min temperature of coldest month                                                                                   #It also averages over the years 2000-2011  
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 bio6_mean.tif SW_clip/bio6_mean_SWclip.tif

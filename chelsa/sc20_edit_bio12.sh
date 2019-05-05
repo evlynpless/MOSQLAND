@@ -27,5 +27,7 @@ gdal_translate  -projwin -85 31.5 -79.8 24.0  bio12_mean.tif  $OUTDIR/bio12_mean
 
 gdal_translate -of AAIGrid $OUTDIR/bio12_mean_FloridaClip.tif $OUTDIR/bio12_mean_FloridaClip.asc
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 bio12_mean.tif SW_clip/bio12_mean_SWclip.tif
+
 #This script is for editing the chelsa version of bio12: annual precipitation                                                                                                          
 #It also averages over the years 2000-2013 

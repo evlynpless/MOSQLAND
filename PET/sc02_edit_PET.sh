@@ -26,3 +26,4 @@ gdal_edit.py -a_nodata -999 $OUTDIR/pet_mean_FloridaClip.tif
 
 gdal_translate -of AAIGrid $OUTDIR/pet_mean_FloridaClip.tif $OUTDIR/pet_mean_FloridaClip.asc
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 pet_mean.tif   SW_clip/pet_mean_SWclip.tif

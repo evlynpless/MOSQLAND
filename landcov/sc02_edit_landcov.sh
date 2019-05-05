@@ -23,6 +23,8 @@ gdal_translate  -projwin -113.5 36.5 -79.0 24.0  consensus_full_class_${n}.tif  
 
 gdal_translate  -projwin -120.5 37 -79.0 24.0  consensus_full_class_${n}.tif  $OUTDIR/consensus_full_class_${n}_NAmClip3.tif
 
+gdal_translate  -projwin -113.1 35.8 -100.5 28.7 consensus_full_class_${n}.tif SW_clip/consensus_full_class_${n}_SWclip.tif
+
 #gdal_translate -of AAIGrid $OUTDIR/consensus_full_class_${n}_FloridaClip.tif $OUTDIR/consensus_full_class_${n}_FloridaClip.asc
 
 done
