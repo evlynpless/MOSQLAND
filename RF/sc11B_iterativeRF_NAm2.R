@@ -20,6 +20,19 @@ rm(x)
 }
 }
 
+
+######################################
+#Create training and validation sets for spatial.p
+######################################
+NumPairs = length(spatial.p)
+Training = NumPairs * 0.7
+TrainingInt = round(Training)
+TrainingPairs = sample(1:NumPairs, TrainingInt, replace = FALSE)
+spatial.p.train = spatial.p[TrainingPairs]
+spatial.p.valid = spatial.p[-TrainingPairs]
+
+
+
 ########################################
 #Calculate mean of straight lines and making initial RF model
 #######################################
@@ -39,8 +52,8 @@ gc()
 Straight_rsq = tail(Straight_RF$rsq ,1 ) 
 Straight_mse = tail(Straight_RF$mse ,1 ) 
 
-write.table(Straight_rsq, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/RSQ_Table.txt")
-write.table(Straight_mse, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/MSE_Table.txt") 
+write.table(Straight_rsq, "RSQ_Table.txt")
+write.table(Straight_mse, "MSE_Table.txt") 
 
 
 StraightPred <- predict(env, Straight_RF)
@@ -83,7 +96,15 @@ for (x in 1:(NumPoints-1)) {
 FT=a[,1] != a[,2]
 pointlist=a[ which(FT),]
 
+pointlist.train = pointlist[TrainingPairs,]
+pointlist.valid = pointlist[-TrainingPairs,]
+
+
 NumPairs = length(pointlist)/2
+
+NumPairs.train = length(pointlist.train)/2
+NumPairs.valid = length(pointlist.valid)/2
+
 
 print("starting loops")
 
@@ -104,14 +125,16 @@ for (it in 1:2) {
   gc()
 
 
-  LcpLoop <- foreach(r=1:NumPairs, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
-	Ato <- shortestPath(trNAm1C, P.points[pointlist[r,1]] ,P.points[pointlist[r,2]]  , output="SpatialLines")
-        cbind (  pointlist[r,1] ,  pointlist[r,2]  , raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
+  LcpLoop <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
+	Ato <- shortestPath(trNAm1C, P.points[pointlist.train[r,1]] ,P.points[pointlist.train[r,2]]  , output="SpatialLines")
+        cbind (  pointlist.train[r,1] ,  pointlist.train[r,2]  , raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
 
 }
 
 	LcpLoopDF <- as.data.frame(LcpLoop)
 
+
+#how to deal with this
 	LcpLoopDF$FST_arl <- G.table$FST_arl
 
 	LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
@@ -128,8 +151,8 @@ gc()
 LCP_rsq = tail(LCP_RF$rsq ,1 )
 LCP_mse = tail(LCP_RF$mse ,1 )
 
-write.table(LCP_rsq, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/RSQ_Table.txt", append=TRUE)
-write.table(LCP_mse, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/MSE_Table.txt", append=TRUE)
+write.table(LCP_rsq, "RSQ_Table.txt", append=TRUE)
+write.table(LCP_mse, "MSE_Table.txt", append=TRUE)
 
 
 #  assign(paste0("LCP_RF", it), LCP_RF )
