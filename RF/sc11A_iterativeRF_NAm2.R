@@ -88,7 +88,7 @@ NumPairs = length(pointlist)/2
 print("starting loops")
 
 it <- 1
-for (it in 1:2) {
+for (it in 1:10) {
   
   rm(trNAm1C)
   gc()

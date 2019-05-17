@@ -12,6 +12,11 @@ library("doMC")
 
 load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11_rasterstack_image.RData")
 
+rm(G.table)
+
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/FST_list_NAmRF2_noKeys.csv", sep=",", header=T)
+
+
 rmr=function(x){
 ## function to truly delete raster and temporary files associated with them
 if(class(x)=="RasterLayer"&grepl("^/tmp",x@file@name)&fromDisk(x)==T){
@@ -19,17 +24,6 @@ file.remove(x@file@name,sub("grd","gri",x@file@name))
 rm(x)
 }
 }
-
-
-######################################
-#Create training and validation sets for spatial.p
-######################################
-NumPairs = length(spatial.p)
-Training = NumPairs * 0.7
-TrainingInt = round(Training)
-TrainingPairs = sample(1:NumPairs, TrainingInt, replace = FALSE)
-spatial.p.train = spatial.p[TrainingPairs]
-spatial.p.valid = spatial.p[-TrainingPairs]
 
 
 
@@ -40,20 +34,37 @@ StraightMean <- raster::extract(env, spatial.p, fun=mean, na.rm=TRUE)
 
 StraightMeanDF <- as.data.frame(StraightMean)
 
+#combine using join instead?
 StraightMeanDF$FST_arl <- G.table$FST_arl
 
 #option of trying DPS
 #StraightMeanDF$DPS <- G.table$DPS
   
-Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF)
+#change this
+NumPairs = length(StraightMeanDF)
+Training = NumPairs * 0.7
+TrainingInt = round(Training)
+TrainingPairs = sample(1:NumPairs, TrainingInt, replace = FALSE)
+StraightMeanDF.train = StraightMeanDF[TrainingPairs,]
+StraightMeanDF.valid = StraightMeanDF[-TrainingPairs,]
+
+Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF.train)
 
 gc()
 
 Straight_rsq = tail(Straight_RF$rsq ,1 ) 
-Straight_mse = tail(Straight_RF$mse ,1 ) 
+Straight_mse = tail(Straight_RF$mse ,1 )  
 
-write.table(Straight_rsq, "RSQ_Table.txt")
-write.table(Straight_mse, "MSE_Table.txt") 
+write.table(Straight_rsq, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/RSQ_Table.txt")
+write.table(Straight_mse, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/MSE_Table.txt")
+
+
+#save these as variables and save to a table
+cor1 = cor(Straight_RF$predict, StraightMeanDF.train$FST_arl)
+cor2 = cor(predict(Straight_RF, StraightMeanDF.valid), StraightMeanDF.valid$FST_arl)
+
+write.table(cor1, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/InternalValidation.txt")
+write.table(cor2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/OOB_Validation.txt")
 
 
 StraightPred <- predict(env, Straight_RF)
@@ -96,15 +107,6 @@ for (x in 1:(NumPoints-1)) {
 FT=a[,1] != a[,2]
 pointlist=a[ which(FT),]
 
-pointlist.train = pointlist[TrainingPairs,]
-pointlist.valid = pointlist[-TrainingPairs,]
-
-
-NumPairs = length(pointlist)/2
-
-NumPairs.train = length(pointlist.train)/2
-NumPairs.valid = length(pointlist.valid)/2
-
 
 print("starting loops")
 
@@ -125,9 +127,9 @@ for (it in 1:2) {
   gc()
 
 
-  LcpLoop <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
-	Ato <- shortestPath(trNAm1C, P.points[pointlist.train[r,1]] ,P.points[pointlist.train[r,2]]  , output="SpatialLines")
-        cbind (  pointlist.train[r,1] ,  pointlist.train[r,2]  , raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
+  LcpLoop <- foreach(r=1:NumPairs, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
+	Ato <- shortestPath(trNAm1C, P.points[pointlist[r,1]] ,P.points[pointlist[r,2]]  , output="SpatialLines")
+        cbind (  pointlist[r,1] ,  pointlist[r,2]  , raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
 
 }
 
@@ -135,9 +137,14 @@ for (it in 1:2) {
 
 
 #how to deal with this
-	LcpLoopDF$FST_arl <- G.table$FST_arl
+	LcpLoopDF = merge(LcpLoopDF, G.table, by=c("V1", "V2"))
 
-	LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
+	#Break data 70/30 here
+
+	LcpLoopDF.train = LcpLoopDF[TrainingPairs,]
+	LcpLoopDF.valid = LcpLoopDF[-TrainingPairs,]
+
+	LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF.train)
 
 print(paste0("finishing RF for iteration #", it))
 
@@ -153,6 +160,12 @@ LCP_mse = tail(LCP_RF$mse ,1 )
 
 write.table(LCP_rsq, "RSQ_Table.txt", append=TRUE)
 write.table(LCP_mse, "MSE_Table.txt", append=TRUE)
+
+cor1 = cor(LCP_RF$predict, LcpLoopDF.train$FST_arl)
+cor2 = cor(predict(LCP_RF, LcpLoopDF.valid), LcpLoopDF.valid$FST_arl)
+
+write.table(cor1, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/InternalValidation.txt", append=TRUE)
+write.table(cor2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/OOB_Validation.txt", append=TRUE)
 
 
 #  assign(paste0("LCP_RF", it), LCP_RF )
@@ -176,4 +189,4 @@ rm(LCP_RF)
 
 }                 
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11A.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11B.RData")
