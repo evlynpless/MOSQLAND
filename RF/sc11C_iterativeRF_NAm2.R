@@ -16,7 +16,7 @@ rm(G.table)
 
 G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/FST_list_NAmRF2_noKeys.csv", sep=",", header=T)
 
-samplesize  <- Sys.getenv(c('samplesize'))
+#samplesize  <- Sys.getenv(c('samplesize'))
 
 rmr=function(x){
 ## function to truly delete raster and temporary files associated with them
@@ -43,7 +43,7 @@ StraightMeanDF$FST_arl <- G.table$FST_arl
   
 
 NumPairs = length(StraightMeanDF)
-Training = NumPairs * samplesize
+Training = NumPairs * 0.7
 TrainingInt = round(Training)
 TrainingPairs = sample(1:NumPairs, TrainingInt, replace = FALSE)
 StraightMeanDF.train = StraightMeanDF[TrainingPairs,]
@@ -51,27 +51,46 @@ StraightMeanDF.valid = StraightMeanDF[-TrainingPairs,]
 
 Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF.train)
 
-Straight_RF_valid = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF.valid)
-
 gc()
 
+#why aren't these the same value?
 Straight_rsq = tail(Straight_RF$rsq ,1 ) 
-Straight_mse = tail(Straight_RF$mse ,1 )  
-Straight_mse_valid = tail(Straight_RF_valid$mse ,1 )
+Straight_rsq_fromEquation = 1 - (tail(Straight_RF$mse , 1) / var(StraightMeanDF.train$FST_arl))     
+write.table(Straight_rsq, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_RSQ_Table.txt")
+write.table(Straight_rsq_fromEquation, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_RSQ_fromEquation_Table.txt")
 
-write.table(Straight_rsq_train, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_RSQ_Table.txt")
-write.table(Straight_mse_train, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_Table.txt")
-write.table(Straight_mse_valid, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_valid_Table.txt")
+Straight_mse = tail(Straight_RF$mse ,1 )  
+Straight_mse_fromEquation = mean ((predict(Straight_RF, StraightMeanDF.train) - StraightMeanDF.train$FST_arl)^2) 
+Straight_mse2 = mean ((predict(Straight_RF, StraightMeanDF.valid) - StraightMeanDF.valid$FST_arl)^2)
+write.table(Straight_mse, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_Table.txt")
+write.table(Straight_mse_fromEquation, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_fromEquation_Table.txt")
+write.table(Straight_mse2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE2_Table.txt")
 
 #save these as variables and save to a table
 cor1 = cor(Straight_RF$predict, StraightMeanDF.train$FST_arl)
 cor2 = cor(predict(Straight_RF, StraightMeanDF.valid), StraightMeanDF.valid$FST_arl)
-
 write.table(cor1, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_InternalValidation.txt")
-write.table(cor2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_OOB_Validation.txt")
+write.table(cor2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_ExternalValidation.txt")
 
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/Straight_scatter1.pdf", 5, 5)
+plot(StraightMeanDF.train$FST_arl, Straight_RF$predicted)
+dev.off()
+
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/Straight_scatter_test.pdf", 5, 5)
+plot(StraightMeanDF.train$FST_arl, predict(Straight_RF, StraightMeanDF.train))
+dev.off()
+
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/Straight_scatter2.pdf", 5, 5)
+plot(StraightMeanDF.valid$FST_arl, predict(Straight_RF, StraightMeanDF.valid))
+dev.off()
 
 StraightPred <- predict(env, Straight_RF)
+
+StraightPred_Test <- predict(Straight_RF, env)
+
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/TestingPredict.RData")
+
+sfdfdgff
 
 #write this as tif and remove it
 
@@ -112,7 +131,7 @@ pointlist=a[ which(FT),]
 print("starting loops")
 
 it <- 1
-for (it in 1:10) {
+for (it in 1:6) {
   
   rm(trNAm1C)
   gc()
@@ -146,9 +165,7 @@ for (it in 1:10) {
 
 	LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF.train)
 
- LCP_RF_valid = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF.valid)
-
-#assign(paste0("LCP_RF", it), LCP_RF )
+assign(paste0("LCP_RF", it), LCP_RF )
 
 
 print(paste0("finishing RF for iteration #", it))
@@ -161,18 +178,35 @@ gc()
 
 
 LCP_rsq = tail(LCP_RF$rsq ,1 )
-LCP_mse = tail(LCP_RF$mse ,1 )
-LCP_mse_valid = tail(LCP_RF_valid$mse ,1 )
+LCP_rsq_fromEquation = 1 - (tail(LCP_RF$mse , 1) / var(LcpLoopDF.train$FST_arl))
 
 write.table(LCP_rsq, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_RSQ_Table.txt", append=TRUE)
+write.table(LCP_rsq_fromEquation, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_RSQ_fromEquation_Table.txt", append=TRUE)
+
+
+LCP_mse = tail(LCP_RF$mse ,1 )
+LCP_mse_fromEquation = mean ((predict(LCP_RF, LcpLoopDF.train) - LcpLoopDF.train$FST_arl)^2)
+LCP_mse2 = mean ((predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$FST_arl)^2)
+
 write.table(LCP_mse, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_Table.txt", append=TRUE)
-write.table(LCP_mse_valid, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_valid_Table.txt", append=TRUE)
+write.table(LCP_mse2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE2_Table.txt", append=TRUE)
+write.table(LCP_mse_fromEquation, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_MSE_fromEquation_Table.txt", append=TRUE)
+
 
 cor1 = cor(LCP_RF$predict, LcpLoopDF.train$FST_arl)
 cor2 = cor(predict(LCP_RF, LcpLoopDF.valid), LcpLoopDF.valid$FST_arl)
 
 write.table(cor1, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_InternalValidation.txt", append=TRUE)
-write.table(cor2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_OOB_Validation.txt", append=TRUE)
+write.table(cor2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11C_ExternalValidation.txt", append=TRUE)
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/LCP_scatter1_", it, ".pdf"), 5, 5)
+plot(LcpLoopDF.train$FST_arl, LCP_RF$predicted)
+dev.off()
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/LCP_scatter2_", it, ".pdf"), 5, 5)
+plot(LcpLoopDF.valid$FST_arl, predict(LCP_RF, LcpLoopDF.valid))
+dev.off()
+
 
 pred = predict(env, LCP_RF)
   
@@ -182,7 +216,7 @@ print(paste0("finishing prediction for iteration #", it))
 
 rm(LCP_RF)
 
-#assign(paste0("pred", it), pred)
+assign(paste0("pred", it), pred)
   
   pred.cond <- 1/pred 
   

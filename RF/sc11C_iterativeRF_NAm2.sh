@@ -21,6 +21,6 @@ module load Rpkgs/RGDAL/1.2-5
 module load Rpkgs/DOPARALLEL/1.0.3
 # --slave      use if you only want to see output
 
-for samplesize in 0.6 0.7 0.8  ; do export samplesize=$samplesize  ; R --vanilla --no-readline -q  -f /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc11C_iterativeRF_NAm2.R ; done 
+R --vanilla --no-readline -q  -f /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc11C_iterativeRF_NAm2.R
 
 
