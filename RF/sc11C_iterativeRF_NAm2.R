@@ -42,7 +42,7 @@ StraightMeanDF$FST_arl <- G.table$FST_arl
 #StraightMeanDF$DPS <- G.table$DPS
   
 
-NumPairs = length(StraightMeanDF)
+NumPairs = nrow(StraightMeanDF)
 Training = NumPairs * 0.7
 TrainingInt = round(Training)
 TrainingPairs = sample(1:NumPairs, TrainingInt, replace = FALSE)
@@ -86,11 +86,6 @@ dev.off()
 
 StraightPred <- predict(env, Straight_RF)
 
-StraightPred_Test <- predict(Straight_RF, env)
-
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/TestingPredict.RData")
-
-sfdfdgff
 
 #write this as tif and remove it
 
