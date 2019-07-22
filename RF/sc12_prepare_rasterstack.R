@@ -11,34 +11,8 @@ library("tidyverse")
 
 crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coordinate system
 
-
 ###############################################
-#Plot lines as SpatialLines:
-###############################################
-
-#Plot straigt lines for first iteration of RF
-
-#G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/FST_list_NAmRF2_noKeys.csv", sep=",", header=T) 
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/FST_list_NAmRF3.csv", sep=",", header=T)
-
-
-#create dataframes of begin and end coordinates from a file:
-begin.table <- G.table[,c(7,6)]
-begin.coord <- begin.table
-coordinates(begin.coord) <- c("long1", "lat1")
-
-end.table <- G.table[,c(9,8)]
-end.coord <- end.table
-coordinates(end.coord) <- c("long2", "lat2")
-
-p <- psp(begin.table[,1], begin.table[,2], end.table[,1], end.table[,2], owin(range(c(begin.table[,1], end.table[,1])), range(c(begin.table[,2], end.table[,2]))))
-
-spatial.p <- as(p, "SpatialLines")
-proj4string(spatial.p) <- crs.geo  # define projection system of our data
-
-print("spatial lines done")
-###############################################
-#Create raster stack 
+#Create raster stack
 ###############################################
 
 aridI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/NAm_clip/AI_annual_NAmClip2_Int16.tif")
@@ -153,6 +127,7 @@ GPPI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GPP/mnth/m
 GPP = GPPI*1
 proj4string(GPP) <- crs.geo
 
+
 env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP)
 
 names(env) [1] <- "arid"
@@ -162,7 +137,7 @@ names(env) [4] <- "mean.temp"
 names(env) [5] <- "human.density"
 names(env) [6] <- "friction"
 names(env) [7] <- "min.temp"
-names(env) [8] <- "Needleleaf" 
+names(env) [8] <- "Needleleaf"
 names(env) [9] <- "EvBroadleaf"
 names(env) [10] <- "DecBroadleaf"
 names(env) [11] <- "MiscTrees"
@@ -184,77 +159,6 @@ names(env) [26] <- "prec.wet"
 names(env) [27] <- "prec.dry"
 names(env) [28] <- "GPP"
 
-
 print("raster stack done")
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11_rasterstack_image2.RData")
-
-jjkdsfsd
-
-########################################
-#Calculate mean of straight lines and making initial RF model
-#######################################
-StraightMean <- raster::extract(env, spatial.p, fun=mean, na.rm=TRUE)
-
-StraightMeanDF <- as.data.frame(StraightMean)
-
-StraightMeanDF$FST_arl <- G.table$FST_arl
-
-#option of trying DPS
-#StraightMeanDF$DPS <- G.table$DPS
-  
-Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF)
-
-StraightPred <- predict(env, Straight_RF)
-
-print("first prediction resistance surface done")
-
-pred.cond <- 1/StraightPred #build conductance surface
-
-#Prepare points for use in least cost path loops
-P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/SW/SWRF_points_list.csv", sep=",", header=T)
-P.coordinates1 <- P.table[,c(3,2)]
-P.points <- SpatialPoints(P.table[,c(3,2)])  # ... converted into a spatial object
-proj4string(P.points) <- crs.geo  
-#plot(P.points)
-
-print("starting loops")
-
-it <- 1
-for (it in 1:10) {
-  
-  trFlorida <- transition(pred.cond, transitionFunction=mean, directions=8) #make transitional matrix
-  trFloridaC <- geoCorrection(trFlorida, type="c") 
-
-  AtoT <- shortestPath(trFloridaC, P.points[1,], P.points[1,], output="SpatialLines")
-  for (x in 1:15) {  
-    for (y in (x+1):16) { 
-     Ato <- shortestPath(trFloridaC, P.points[x,], P.points[y,], output="SpatialLines")
-     AtoT <- AtoT + Ato
-     assign(paste0("Ato_px",x,"_py",y,"_it",it) , Ato)   
-
-    }
-  }
-  AtoT = (AtoT[-1])
-
-  LcpLoop <- raster::extract(env, AtoT, fun=mean, na.rm=TRUE)
-
-  LcpLoopDF <- as.data.frame(LcpLoop)
-
-  LcpLoopDF$FST_arl <- G.table$FST_arl
-
-  LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
-
-  assign(paste0("LCP_RF", it), LCP_RF )
-
-  pred = predict(env, LCP_RF)
-
-  assign(paste0("pred", it), pred)
-  
-  pred.cond <- 1/pred 
-  
-  print("round done")
-
-}
-
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/sc10.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_rasterstack_image.RData")

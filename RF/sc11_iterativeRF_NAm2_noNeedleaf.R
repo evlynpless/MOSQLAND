@@ -1,4 +1,4 @@
-#Creating North America raster stack for use in iterative RF model
+#Building iterative RF model with Florida as test case
 
 library("sp")
 library("spatstat")
@@ -18,9 +18,7 @@ crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coo
 
 #Plot straigt lines for first iteration of RF
 
-#G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/FST_list_NAmRF2_noKeys.csv", sep=",", header=T) 
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/FST_list_NAmRF3.csv", sep=",", header=T)
-
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/FST_list_NAmRF2_noKeys.csv", sep=",", header=T) 
 
 #create dataframes of begin and end coordinates from a file:
 begin.table <- G.table[,c(7,6)]
@@ -69,9 +67,9 @@ min.tempI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/chels
 min.temp <- min.tempI*1
 proj4string(min.temp) <- crs.geo
 
-NeedleleafI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_1_NAmClip2.tif")
-Needleleaf = NeedleleafI*1
-proj4string(Needleleaf) <- crs.geo
+#NeedleleafI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_1_NAmClip2.tif")
+#Needleleaf = NeedleleafI*1
+#proj4string(Needleleaf) <- crs.geo
 
 EvBroadleafI  = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_2_NAmClip2.tif")
 EvBroadleaf = EvBroadleafI*1
@@ -153,7 +151,7 @@ GPPI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GPP/mnth/m
 GPP = GPPI*1
 proj4string(GPP) <- crs.geo
 
-env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP)
+env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP)
 
 names(env) [1] <- "arid"
 names(env) [2] <- "access"
@@ -162,32 +160,31 @@ names(env) [4] <- "mean.temp"
 names(env) [5] <- "human.density"
 names(env) [6] <- "friction"
 names(env) [7] <- "min.temp"
-names(env) [8] <- "Needleleaf" 
-names(env) [9] <- "EvBroadleaf"
-names(env) [10] <- "DecBroadleaf"
-names(env) [11] <- "MiscTrees"
-names(env) [12] <- "Shrubs"
-names(env) [13] <- "Herb"
-names(env) [14] <- "Crop"
-names(env) [15] <- "Flood"
-names(env) [16] <- "Urban"
-names(env) [17] <- "Snow"
-names(env) [18] <- "Barren"
-names(env) [19] <- "Water"
-names(env) [20] <- "Slope"
-names(env) [21] <- "Altitude"
-names(env) [22] <- "PET"
-names(env) [23] <- "DailyTempRange"
-names(env) [24] <- "max.temp"
-names(env) [25] <- "AnnualTempRange"
-names(env) [26] <- "prec.wet"
-names(env) [27] <- "prec.dry"
-names(env) [28] <- "GPP"
+names(env) [8] <- "EvBroadleaf"
+names(env) [9] <- "DecBroadleaf"
+names(env) [10] <- "MiscTrees"
+names(env) [11] <- "Shrubs"
+names(env) [12] <- "Herb"
+names(env) [13] <- "Crop"
+names(env) [14] <- "Flood"
+names(env) [15] <- "Urban"
+names(env) [16] <- "Snow"
+names(env) [17] <- "Barren"
+names(env) [18] <- "Water"
+names(env) [19] <- "Slope"
+names(env) [20] <- "Altitude"
+names(env) [21] <- "PET"
+names(env) [22] <- "DailyTempRange"
+names(env) [23] <- "max.temp"
+names(env) [24] <- "AnnualTempRange"
+names(env) [25] <- "prec.wet"
+names(env) [26] <- "prec.dry"
+names(env) [27] <- "GPP"
 
 
 print("raster stack done")
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11_rasterstack_image2.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_2/sc11_rasterstack_image_noNeedleaf.RData")
 
 jjkdsfsd
 

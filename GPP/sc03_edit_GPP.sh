@@ -23,9 +23,10 @@ gdalbuildvrt -separate -overwrite  GPP.vrt    GPP.VPM.mean.M01.v20.CMG_res.tif  
 
 pkstatprofile  -f mean  -i  GPP.vrt  -o  GPP_mean.tif
 
-#Make a Florida average
+ gdal_translate -a_nodata -9999 GPP_mean.tif GPP_mean.tif 
+
+#Florida clip
 gdal_translate  -projwin -85 31.5 -79.8 24.0 -co COMPRESS=DEFLATE -co ZLEVEL=9 -co INTERLEAVE=BAND GPP_mean.tif   $OUTDIR/GPP_mean_Florida_clip.tif                             
 
-#gdal_translate -of AAIGrid $OUTDIR/GPP_mean_Florida_clip.tif  $OUTDIR/GPP_mean_Florida_clip.asc 
-
+#Southwest clip
 gdal_translate  -projwin -113.1 35.8 -100.5 28.7  GPP_mean.tif   SW_clip/GPP_mean_SWclip.tif  
