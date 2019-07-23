@@ -9,7 +9,7 @@
 #SBATCH --mail-user=evlyn.pless@yale.edu                                
 #SBATCH --job-name=sc12_iterativeRF_NAm3.sh                     
 
-####  for runnum in 1 2  ; do sbatch --export=runnum=$runnum  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc11C_iterativeRF_NAm2.sh ; done   
+####  for runnum in 1:2  ; do sbatch --export=runnum=$runnum  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc11C_iterativeRF_NAm2.sh ; done   
 
 ulimit -c 0
 
