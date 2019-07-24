@@ -152,7 +152,7 @@ print("starting loops")
 
 
 it <- 1
-for (it in 1:5) {
+for (it in 1:3) {
   
   rm(trNAm1C)
   gc()
@@ -209,7 +209,7 @@ LCP_mse = tail(LCP_RF$mse ,1 )
 LCP_mse2 = mean ((predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$FST_arl)^2)
 
 write.table(LCP_mse, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_MSE_Table_", runnum, ".txt"), append=TRUE, row.names =FALSE, col.names=FALSE)
-write.table(LCP_mse2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_MSE2_Table.txt", append=TRUE, row.names =FALSE, col.names=FALSE)
+write.table(LCP_mse2, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_MSE2_Table_" runnum, ".txt", append=TRUE, row.names =FALSE, col.names=FALSE)
 #write.table(LCP_mse_fromEquation, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_MSE_fromEquation_Table_", runnum, ".txt"), append=TRUE, row.names =FALSE, col.names=FALSE)
 
 
@@ -246,4 +246,4 @@ assign(paste0("pred", it), pred)
 
 }                 
 
-save.image(file = paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_", runnum, ".RData")
+save.image(file = paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_", runnum, ".RData"))

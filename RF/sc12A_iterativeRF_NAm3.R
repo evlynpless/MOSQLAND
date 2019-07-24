@@ -12,7 +12,7 @@ library("doMC")
 
 #load prepared raster stack for North America
 
-load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_rasterstack_image.RData")
+load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/rasterstack_image.RData")
 
 runnum  <- Sys.getenv(c('runnum'))
 print(runnum)
@@ -111,10 +111,6 @@ Cor2_vec  = c(Cor2)
 #plot(StraightMeanDF.train$FST_arl, Straight_RF$predicted)
 #dev.off()
 
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/Straight_scatter_test.pdf", 5, 5)
-#plot(StraightMeanDF.train$FST_arl, predict(Straight_RF, StraightMeanDF.train))
-#dev.off()
-
 #pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/Straight_scatter2.pdf", 5, 5)
 #plot(StraightMeanDF.valid$FST_arl, predict(Straight_RF, StraightMeanDF.valid))
 #dev.off()
@@ -157,11 +153,9 @@ pointlist=a[ which(FT),]
 
 print("starting loops")
 
-#save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_BeforeLoops.RData")
-
 
 it <- 1
-for (it in 1:5) {
+for (it in 1:3) {
   
   rm(trNAm1C)
   gc()
@@ -223,14 +217,6 @@ Cor1_vec  = append(Cor1_vec, Cor1)
 Cor2_vec  = append(Cor2_vec, Cor2)
 
 
-#pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LCP_scatter1_", it, ".pdf"), 5, 5)
-#plot(LcpLoopDF.train$FST_arl, LCP_RF$predicted)
-#dev.off()
-
-#pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LCP_scatter2_", it, ".pdf"), 5, 5)
-#plot(LcpLoopDF.valid$FST_arl, predict(LCP_RF, LcpLoopDF.valid))
-#dev.off()
-
 pred = predict(env, LCP_RF)
 
 print(paste0("finishing prediction for iteration #", it))
@@ -240,20 +226,49 @@ rm(LCP_RF)
 
 assign(paste0("pred", it), pred)
   
-  pred.cond <- 1/pred 
+pred.cond <- 1/pred 
   
-  rmr(pred)
-  gc()
+rmr(pred)
+  
+gc()
 
-  print(paste0("end of loop for iteration #", it))
-
+print(paste0("end of loop for iteration #", it))
 
 }                 
 
 
 d = data.frame(RSQ = RSQ_vec, RSQeq = RSQeq_vec, MSE = MSE_vec, MSEeq = MSEeq_vec, MSE2 = MSE2_vec, Cor1 = Cor1_vec,  Cor2 = Cor2_vec) 
+write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/", runnum, "_ValidationTable.csv"), row.names =FALSE)
 
-pos_max = which.max(Cor2)
+
+pos_max = which.max(Cor2_vec)
+
+if(pos_max > 1) {
+best_it = pos_max - 1
+RF = paste0("LCP_RF", best_it)
+ResistanceMap = paste0("pred", best_it)
+} else {
+  print("The straight lines are the best model")
+  best_it = pos_max - 1
+  RF = Straight_RF
+  ResistanceMap = StraightPred
+}
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/", runnum, "_ImpVars_it", best_it, ".pdf"), 5, 5)
+varImpPlot(RF)
+dev.off()
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/", runnum, "_LCP_scatter1_it", best_it, ".pdf"), 5, 5)
+plot(LcpLoopDF.train$FST_arl, RF$predicted)
+dev.off()
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/", runnum, "_LCP_scatter2_it", best_it, ".pdf"), 5, 5)
+plot(LcpLoopDF.valid$FST_arl, predict(RF, LcpLoopDF.valid))
+dev.off()
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/", runnum, "_Pred_it", best_it, ".pdf"), 5, 5)
+plot(ResistanceMap)
+dev.off()
 
 
 #save.image(file = paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_", runnum, ".RData")
