@@ -22,6 +22,4 @@ module load Rpkgs/DOPARALLEL/1.0.3
 
 export runnum=$runnum
 echo $runnum
-R --vanilla --no-readline -q  -f /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc12_iterativeRF_NAm3.R
-
-
+Rscript --vanilla   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc12_iterativeRF_NAm3.R $runnum

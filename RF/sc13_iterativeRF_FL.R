@@ -1,4 +1,5 @@
-#Building iterative RF model with Florida as test case
+#Building iterative RF model with Florida, no Keys
+#Full dataset due to small number of points
 
 library("sp")
 library("spatstat")
@@ -11,30 +12,14 @@ library("tidyverse")
 
 crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coordinate system
 
+rmr=function(x){
+## function to truly delete raster and temporary files associated with them
+if(class(x)=="RasterLayer"&grepl("^/tmp",x@file@name)&fromDisk(x)==T){
+file.remove(x@file@name,sub("grd","gri",x@file@name))
+rm(x)
+}
+}
 
-###############################################
-#Plot lines as SpatialLines:
-###############################################
-
-#Plot straigt lines for first iteration of RF
-
-G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FST_list_Florida_reorder_noKeys.csv", sep=",", header=T) 
-
-#create dataframes of begin and end coordinates from a file:
-begin.table <- G.table[,c(4,3)]
-begin.coord <- begin.table
-coordinates(begin.coord) <- c("long1", "lat1")
-
-end.table <- G.table[,c(6,5)]
-end.coord <- end.table
-coordinates(end.coord) <- c("long2", "lat2")
-
-p <- psp(begin.table[,1], begin.table[,2], end.table[,1], end.table[,2], owin(range(c(begin.table[,1], end.table[,1])), range(c(begin.table[,2], end.table[,2]))))
-
-spatial.p <- as(p, "SpatialLines")
-proj4string(spatial.p) <- crs.geo  # define projection system of our data
-
-print("spatial lines done")
 ###############################################
 #Create raster stack 
 ###############################################
@@ -185,8 +170,33 @@ names(env) [28] <- "GPP"
 
 print("raster stack done")
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/sc05E_sc06E_rasterstack_image.RData")
+#save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FL_rasterstack_image.RData")
 
+load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FL_rasterstack_image.RData")
+
+###############################################
+#Plot lines as SpatialLines:
+###############################################
+
+#Plot straigt lines for first iteration of RF
+
+G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FST_list_Florida_reorder_noKeys.csv", sep=",", header=T)
+
+#create dataframes of begin and end coordinates from a file:
+begin.table <- G.table[,c(4,3)]
+begin.coord <- begin.table
+coordinates(begin.coord) <- c("long1", "lat1")
+
+end.table <- G.table[,c(6,5)]
+end.coord <- end.table
+coordinates(end.coord) <- c("long2", "lat2")
+
+p <- psp(begin.table[,1], begin.table[,2], end.table[,1], end.table[,2], owin(range(c(begin.table[,1], end.table[,1])), range(c(begin.table[,2], end.table[,2]))))
+
+spatial.p <- as(p, "SpatialLines")
+proj4string(spatial.p) <- crs.geo  # define projection system of our data
+
+print("spatial lines done")
 
 ########################################
 #Calculate mean of straight lines and making initial RF model
@@ -199,22 +209,46 @@ StraightMeanDF$FST_arl <- G.table$FST_arl
 
 #option of trying DPS
 #StraightMeanDF$DPS <- G.table$DPS
-  
+ 
+set.seed(NULL)
+ 
 Straight_RF = randomForest(FST_arl ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF)
 
-#Straight_RF_text = Straight_RF
 
-#write.csv(Straight_RF_text, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/Straight_RF.csv")
+#Define empty vectors
+RSQ_vec = c()
+RSQeq_vec = c()
+MSE_vec	    = c()
+MSEeq_vec = c()
 
+#Performance measures
+RSQ = tail(Straight_RF$rsq ,1 ) 
+RSQeq = 1 - (tail(Straight_RF$mse , 1) / var(StraightMeanDF$FST_arl))   
+MSE = tail(Straight_RF$mse ,1 )  
+MSEeq = mean ((predict(Straight_RF, StraightMeanDF) - StraightMeanDF$FST_arl)^2) 
+
+#Add straight line parameters to the vectors
+RSQ_vec	        = c(RSQ)
+RSQeq_vec = c(RSQeq)
+MSE_vec   = c(MSE)
+MSEeq_vec = c(MSEeq)
+
+
+fit1 = lm(Straight_RF$predicted ~ StraightMeanDF$FST_arl)
+adjr2 = round(summary(fit1)$adj.r.squared, digits=3)
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5_StraightRFScatter.pdf", 5, 5)
+plot(StraightMeanDF$FST_arl, Straight_RF$predicted,  xlab ="Observed FST", ylab="Predicted FST")
+legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+dev.off()
 
 StraightPred <- predict(env, Straight_RF)
 
-print("first prediction resistance surface done")
+	     	print("first prediction resistance surface done")
 
 pred.cond <- 1/StraightPred #build conductance surface
 
 #Prepare points for use in least cost path loops
-P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL_points_list_noKeys.csv", sep=",", header=T)
+P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FL_points_list_noKeys.csv", sep=",", header=T)
 P.coordinates1 <- P.table[,c(3,2)]
 P.points <- SpatialPoints(P.table[,c(3,2)])  # ... converted into a spatial object
 proj4string(P.points) <- crs.geo  
@@ -224,16 +258,20 @@ print("starting loops")
 
 it <- 1
 for (it in 1:10) {
-  
+
   trFlorida <- transition(pred.cond, transitionFunction=mean, directions=8) #make transitional matrix
   trFloridaC <- geoCorrection(trFlorida, type="c") 
+
+  	                 print("transition matrix done")
+  	                 rm(trFlorida)
+  	                 gc()
 
   AtoT <- shortestPath(trFloridaC, P.points[1,], P.points[1,], output="SpatialLines")
   for (x in 1:10) {  
     for (y in (x+1):11) { 
      Ato <- shortestPath(trFloridaC, P.points[x,], P.points[y,], output="SpatialLines")
      AtoT <- AtoT + Ato
-     assign(paste0("Ato_px",x,"_py",y,"_it",it) , Ato)   
+     #assign(paste0("Ato_px",x,"_py",y,"_it",it) , Ato)   
 
     }
   }
@@ -249,20 +287,69 @@ for (it in 1:10) {
 
   assign(paste0("LCP_RF", it), LCP_RF )
 
+  			  print(paste0("finishing RF for iteration #", it))
+  			  gc()
+			  rm(trFloridaC)
+			  gc()
+
+RSQ = tail(LCP_RF$rsq ,1 )
+RSQeq = 1 - (tail(LCP_RF$mse , 1) / var(LcpLoopDF$FST_arl))
+MSE = tail(LCP_RF$mse ,1 )
+MSEeq = mean ((predict(LCP_RF, LcpLoopDF) - LcpLoopDF$FST_arl)^2)
+
+RSQ_vec   = append(RSQ_vec, RSQ)
+RSQeq_vec = append(RSQeq_vec, RSQeq)
+MSE_vec   = append(MSE_vec, MSE)
+MSEeq_vec = append(MSEeq_vec, MSEeq)
+  
+
+
   pred = predict(env, LCP_RF)
+
+       	 	      rm(LCP_RF)
 
   assign(paste0("pred", it), pred)
   
   pred.cond <- 1/pred 
-  
-  print("round done")
+
+  	       	      rmr(pred)
+ 		      gc()
+		      print(paste0("end of loop for iteration #", it))
 
 }
 
-#make table of RF variance explained
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/sc05E_sc06E.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5.RData")
+#load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run1.RData")
 
-test = summary(LCP_RF)
+d = data.frame(RSQ = RSQ_vec, RSQeq = RSQeq_vec, MSE = MSE_vec, MSEeq = MSEeq_vec) 
+write.csv(d, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5_ValidationTable.csv", row.names =FALSE)
 
-write.csv(test, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/test.csv")
+pos_max = which.max(RSQ_vec)
+
+if(pos_max > 1) {
+best_it = pos_max - 1
+RF = paste0("LCP_RF", best_it)
+ResistanceMap = paste0("pred", best_it)
+} else {
+  print("The straight lines are the best model")
+  best_it = pos_max - 1
+  RF = Straight_RF
+  ResistanceMap = StraightPred
+}
+
+#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/BestPred_Run3.pdf", 5, 5)
+#plot(ResistanceMap)
+#dev.off()
+
+
+#fit2 = lm(RF$predicted ~ LcpLoopDF$FST_arl)
+#adjr22 = round(summary(fit2)$adj.r.squared, digits=3)
+#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run3_BestModelScatter.pdf", 5, 5)
+#plot(LcpLoopDF$FST_arl, RF$predicted,  xlab ="Observed FST", ylab="Predicted FST")
+#legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr22)), cex=0.7)
+#dev.off()
+
+#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run3_ImpVars.pdf", 5, 5)
+#varImpPlot(RF)
+#dev.off()
