@@ -1,6 +1,8 @@
 #Building iterative RF model with Florida, no Keys
 #Full dataset due to small number of points
 
+run=6
+
 library("sp")
 library("spatstat")
 library("maptools")
@@ -172,7 +174,7 @@ print("raster stack done")
 
 #save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FL_rasterstack_image.RData")
 
-load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FL_rasterstack_image.RData")
+#load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FL_rasterstack_image.RData")
 
 ###############################################
 #Plot lines as SpatialLines:
@@ -236,7 +238,7 @@ MSEeq_vec = c(MSEeq)
 
 fit1 = lm(Straight_RF$predicted ~ StraightMeanDF$FST_arl)
 adjr2 = round(summary(fit1)$adj.r.squared, digits=3)
-pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5_StraightRFScatter.pdf", 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run",run,"_StraightRFScatter.pdf"), 5, 5)
 plot(StraightMeanDF$FST_arl, Straight_RF$predicted,  xlab ="Observed FST", ylab="Predicted FST")
 legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
@@ -319,37 +321,53 @@ MSEeq_vec = append(MSEeq_vec, MSEeq)
 }
 
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5.RData")
+save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run",run,".RData"))
 #load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run1.RData")
 
 d = data.frame(RSQ = RSQ_vec, RSQeq = RSQeq_vec, MSE = MSE_vec, MSEeq = MSEeq_vec) 
-write.csv(d, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5_ValidationTable.csv", row.names =FALSE)
+write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run",run,"_ValidationTable.csv"), row.names =FALSE)
+
+RF0 = Straight_RF
+RF1 = LCP_RF1 
+RF2 = LCP_RF2 
+RF3 = LCP_RF3 
+RF4 = LCP_RF4 
+RF5 = LCP_RF5 
+RF6 = LCP_RF6 
+RF7 = LCP_RF7
+RF8 = LCP_RF8
+RF9 = LCP_RF9
+RF10 = LCP_RF10
+resist0 = StraightPred
+resist1 = pred1 
+resist2 = pred2 
+resist3 = pred3 
+resist4 = pred4 
+resist5 = pred5 
+resist6 = pred6 
+resist7 = pred7
+resist8 = pred8
+resist9 = pred9
+resist10 = pred10
 
 pos_max = which.max(RSQ_vec)
 
-if(pos_max > 1) {
 best_it = pos_max - 1
-RF = paste0("LCP_RF", best_it)
-ResistanceMap = paste0("pred", best_it)
-} else {
-  print("The straight lines are the best model")
-  best_it = pos_max - 1
-  RF = Straight_RF
-  ResistanceMap = StraightPred
-}
-
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/BestPred_Run3.pdf", 5, 5)
-#plot(ResistanceMap)
-#dev.off()
+RF = paste0("RF", best_it)
+ResistanceMap = paste0("resist", best_it)
 
 
-#fit2 = lm(RF$predicted ~ LcpLoopDF$FST_arl)
-#adjr22 = round(summary(fit2)$adj.r.squared, digits=3)
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run3_BestModelScatter.pdf", 5, 5)
-#plot(LcpLoopDF$FST_arl, RF$predicted,  xlab ="Observed FST", ylab="Predicted FST")
-#legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr22)), cex=0.7)
-#dev.off()
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run",run,"_BestPred.pdf"), 5, 5)
+plot(get(ResistanceMap))
+dev.off()
 
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run3_ImpVars.pdf", 5, 5)
-#varImpPlot(RF)
-#dev.off()
+fit = lm(get(RF)$predicted ~ LcpLoopDF$FST_arl)
+adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run",run,"_BestModelScatter.pdf"), 5, 5)
+plot(LcpLoopDF$FST_arl, get(RF)$predicted,  xlab ="Observed FST", ylab="Predicted FST")
+legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr22)), cex=0.7)
+dev.off()
+
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run",run,"_ImpVars.pdf"), 5, 5)
+varImpPlot(get(RF))
+dev.off()

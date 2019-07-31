@@ -8,7 +8,7 @@
 #SBATCH --job-name=test_runnum.sh 
 
 
-####  for runnum in 1 2   ; do sbatch --export=runnum=$runnum /home/fas/powell/esp38/scripts/MOSQLAND/RF/test_runnum.sh  ; done
+####  for runnum in test1 test2; do sbatch --export=runnum=$runnum /home/fas/powell/esp38/scripts/MOSQLAND/RF/test_runnum.sh  ; done
 
 ulimit -c 0
 

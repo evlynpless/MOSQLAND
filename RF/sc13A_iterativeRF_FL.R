@@ -230,12 +230,11 @@ MSE2_vec  = c()
 Cor1_vec  = c()
 Cor2_vec  = c()
 
-#keep editing from here
 #Performance measures
 RSQ = tail(Straight_RF$rsq ,1 ) 
-RSQeq = 1 - (tail(Straight_RF$mse , 1) / var(StraightMeanDF$FST_arl))   
+RSQeq = 1 - (tail(Straight_RF$mse , 1) / var(StraightMeanDF.train$FST_arl))   
 MSE = tail(Straight_RF$mse ,1 )  
-MSEeq = mean ((predict(Straight_RF, StraightMeanDF) - StraightMeanDF$FST_arl)^2) 
+MSEeq = mean ((predict(Straight_RF, StraightMeanDF.train) - StraightMeanDF.train$FST_arl)^2) 
 MSE2 = mean ((predict(Straight_RF, StraightMeanDF.valid) - StraightMeanDF.valid$FST_arl)^2)
 Cor1 = cor(predict(Straight_RF, StraightMeanDF.train), StraightMeanDF.train$FST_arl)
 Cor2 = cor(predict(Straight_RF, StraightMeanDF.valid), StraightMeanDF.valid$FST_arl)
@@ -251,12 +250,19 @@ Cor1_vec  = c(Cor1)
 Cor2_vec  = c(Cor2)
 
 
-#fit1 = lm(Straight_RF$predicted ~ StraightMeanDF$FST_arl)
-#adjr2 = round(summary(fit1)$adj.r.squared, digits=3)
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5_StraightRFScatter.pdf", 5, 5)
-#plot(StraightMeanDF$FST_arl, Straight_RF$predicted,  xlab ="Observed FST", ylab="Predicted FST")
-#legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
-#dev.off()
+fit = lm(Straight_RF$predicted ~ StraightMeanDF.train$FST_arl)
+adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run5_StraightRF_TrainingScatter.pdf", 5, 5)
+plot(StraightMeanDF.train$FST_arl, Straight_RF$predicted,  xlab ="Observed FST (training)", ylab="Predicted FST")
+legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+dev.off()
+
+fit = lm(predict(Straight_RF, StraightMeanDF.valid) ~ StraightMeanDF.valid$FST_arl)
+adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run5_StraightRF_ValidScatter.pdf", 5, 5)
+plot(StraightMeanDF.valid$FST_arl, predict(Straight_RF, StraightMeanDF.valid),  xlab ="Observed FST (validation)", ylab="Predicted FST")
+legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+dev.off()
 
 StraightPred <- predict(env, Straight_RF)
 
@@ -300,7 +306,14 @@ for (it in 1:10) {
 
   LcpLoopDF$FST_arl <- G.table$FST_arl
 
-  LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF)
+
+  #Break data 70/30 here
+
+  LcpLoopDF.train = LcpLoopDF[TrainingPairs,]
+  LcpLoopDF.valid = LcpLoopDF[-TrainingPairs,]
+
+
+  LCP_RF = randomForest(FST_arl ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF.train)
 
   assign(paste0("LCP_RF", it), LCP_RF )
 
@@ -310,18 +323,23 @@ for (it in 1:10) {
 			  gc()
 
 RSQ = tail(LCP_RF$rsq ,1 )
-RSQeq = 1 - (tail(LCP_RF$mse , 1) / var(LcpLoopDF$FST_arl))
+RSQeq = 1 - (tail(LCP_RF$mse , 1) / var(LcpLoopDF.train$FST_arl))
 MSE = tail(LCP_RF$mse ,1 )
-MSEeq = mean ((predict(LCP_RF, LcpLoopDF) - LcpLoopDF$FST_arl)^2)
+MSEeq = mean ((predict(LCP_RF, LcpLoopDF.train) - LcpLoopDF.train$FST_arl)^2)
+MSE2 = mean ((predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$FST_arl)^2)
+Cor1 = cor(predict(LCP_RF, LcpLoopDF.train), LcpLoopDF.train$FST_arl)
+Cor2 = cor(predict(LCP_RF, LcpLoopDF.valid), LcpLoopDF.valid$FST_arl)
 
 RSQ_vec   = append(RSQ_vec, RSQ)
 RSQeq_vec = append(RSQeq_vec, RSQeq)
 MSE_vec   = append(MSE_vec, MSE)
 MSEeq_vec = append(MSEeq_vec, MSEeq)
-  
+MSE2_vec  = append(MSE2_vec, MSE2)
+Cor1_vec  = append(Cor1_vec, Cor1)
+Cor2_vec  = append(Cor2_vec, Cor2)  
 
 
-  pred = predict(env, LCP_RF)
+pred = predict(env, LCP_RF)
 
        	 	      rm(LCP_RF)
 
@@ -336,13 +354,18 @@ MSEeq_vec = append(MSEeq_vec, MSEeq)
 }
 
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5.RData")
-#load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run1.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run5.RData")
 
-d = data.frame(RSQ = RSQ_vec, RSQeq = RSQeq_vec, MSE = MSE_vec, MSEeq = MSEeq_vec) 
-write.csv(d, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run5_ValidationTable.csv", row.names =FALSE)
+
+d = data.frame(RSQ = RSQ_vec, RSQeq = RSQeq_vec, MSE = MSE_vec, MSEeq = MSEeq_vec, MSE2 = MSE2_vec, Cor1 = Cor1_vec, Cor2=Cor2_vec) 
+write.csv(d, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run5_ValidationTable.csv", row.names =FALSE)
+
+
+sdfdsf
 
 pos_max = which.max(RSQ_vec)
+
+#debug this in R
 
 if(pos_max > 1) {
 best_it = pos_max - 1
@@ -355,18 +378,24 @@ ResistanceMap = paste0("pred", best_it)
   ResistanceMap = StraightPred
 }
 
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/BestPred_Run3.pdf", 5, 5)
-#plot(ResistanceMap)
-#dev.off()
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_BestPred_Run2.pdf", 5, 5)
+plot(ResistanceMap)
+dev.off()
 
+fit = lm(RF$predicted ~ LcpLoopDF.train$FST_arl)
+adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run3_BestModelScatter.pdf", 5, 5)
+plot(LcpLoopDF.train$FST_arl, RF$predicted,  xlab ="Observed FST (train)", ylab="Predicted FST")
+legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+dev.off()
 
-#fit2 = lm(RF$predicted ~ LcpLoopDF$FST_arl)
-#adjr22 = round(summary(fit2)$adj.r.squared, digits=3)
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run3_BestModelScatter.pdf", 5, 5)
-#plot(LcpLoopDF$FST_arl, RF$predicted,  xlab ="Observed FST", ylab="Predicted FST")
-#legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr22)), cex=0.7)
-#dev.off()
+fit = lm(predict(RF, LcpLoopDF.valid) ~ LcpLoopDF.valid$FST_arl)
+adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run2_BestModelScatter.pdf", 5, 5)
+plot(LcpLoopDF.valid$FST_arl, predict(RF, LcpLoopDF.valid),  xlab ="Observed FST (valid)", ylab="Predicted FST")
+legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+dev.off()
 
-#pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/FullData_Run3_ImpVars.pdf", 5, 5)
-#varImpPlot(RF)
-#dev.off()
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/FL/SplitData_Run2_ImpVars.pdf", 5, 5)
+varImpPlot(RF)
+dev.off()
