@@ -14,8 +14,6 @@ library("doMC")
 
 load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/rasterstack_image.RData")
 
-runnum  <- Sys.getenv(c('runnum'))
-print(runnum)
 
 rmr=function(x){
 ## function to truly delete raster and temporary files associated with them
