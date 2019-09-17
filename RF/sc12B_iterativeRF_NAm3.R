@@ -59,7 +59,7 @@ StraightMean <- raster::extract(env, spatial.p, fun=mean, na.rm=TRUE)
 StraightMeanDF <- as.data.frame(StraightMean)
 
 #any way to combine using join instead?
-StraightMeanDF$FST_lin <- G.table$FST_lin
+StraightMeanDF$CSE <- G.table$CSE
 
 #option of trying DPS
 #StraightMeanDF$DPS <- G.table$DPS
@@ -74,7 +74,7 @@ StraightMeanDF.valid = StraightMeanDF[-TrainingPairs,]
 
 set.seed(NULL)
 
-Straight_RF = randomForest(FST_lin ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF.train)
+Straight_RF = randomForest(CSE ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=StraightMeanDF.train)
 
 gc()
 
@@ -89,36 +89,36 @@ Cor1_vec  = c()
 Cor2_vec  = c()
 
 #Validation parameters
-RSQ = tail(Straight_RF$rsq ,1 )    
+RSQ = tail(Straight_RF$rsq ,1 )
 RMSE = sqrt(tail(Straight_RF$mse ,1 ))
-RMSE2 = sqrt(((predict(Straight_RF, StraightMeanDF.valid) - StraightMeanDF.valid$FST_lin)^2))
-MAE = mean(abs(Straight_RF$predicted - StraightMeanDF.train$FST_lin))
-MAE2 =  mean(abs(predict(Straight_RF, StraightMeanDF.train) - StraightMeanDF.train$FST_lin))
-MAE3 = mean(abs(predict(Straight_RF, StraightMeanDF.valid) - StraightMeanDF.valid$FST_lin))
-Cor1 = cor(predict(Straight_RF, StraightMeanDF.train), StraightMeanDF.train$FST_lin)
-Cor2 = cor(predict(Straight_RF, StraightMeanDF.valid), StraightMeanDF.valid$FST_lin)
+RMSE2 = sqrt(((predict(Straight_RF, StraightMeanDF.valid) - StraightMeanDF.valid$CSE)^2))
+MAE = mean(abs(Straight_RF$predicted - StraightMeanDF.train$CSE))
+MAE2 =  mean(abs(predict(Straight_RF, StraightMeanDF.train) - StraightMeanDF.train$CSE))
+MAE3 = mean(abs(predict(Straight_RF, StraightMeanDF.valid) - StraightMeanDF.valid$CSE))
+Cor1 = cor(predict(Straight_RF, StraightMeanDF.train), StraightMeanDF.train$CSE)
+Cor2 = cor(predict(Straight_RF, StraightMeanDF.valid), StraightMeanDF.valid$CSE)
 
 #Add straight line parameters to the vectors
 RSQ_vec	  = c(RSQ)
 RMSE_vec   = c(RMSE)
-RMSE2_vec  = c(RMSE2)
+RMSE2_vec = c(RMSE2)
 MAE_vec = c(MAE)
 MAE2_vec = c(MAE2)
 MAE3_vec = c(MAE3)
 Cor1_vec  = c(Cor1)
 Cor2_vec  = c(Cor2)
 
-fit = lm(Straight_RF$predicted ~ StraightMeanDF.train$FST_lin)
+fit = lm(Straight_RF$predicted ~ StraightMeanDF.train$CSE)
 adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,"_StraightRF_TrainingScatter.pdf"), 5, 5)
-plot(StraightMeanDF.train$FST_lin, Straight_RF$predicted,  xlab ="Observed FST (training)", ylab="Predicted FST")
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,"_StraightRF_TrainingScatter.pdf"), 5, 5)
+plot(StraightMeanDF.train$CSE, Straight_RF$predicted,  xlab ="Observed CSE (training)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
-fit = lm(predict(Straight_RF, StraightMeanDF.valid) ~ StraightMeanDF.valid$FST_lin)
+fit = lm(predict(Straight_RF, StraightMeanDF.valid) ~ StraightMeanDF.valid$CSE)
 adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,"_StraightRF_ValidScatter.pdf"), 5, 5)
-plot(StraightMeanDF.valid$FST_lin, predict(Straight_RF, StraightMeanDF.valid),  xlab ="Observed FST (validation)", ylab="Predicted FST")
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,"_StraightRF_ValidScatter.pdf"), 5, 5)
+plot(StraightMeanDF.valid$CSE, predict(Straight_RF, StraightMeanDF.valid),  xlab ="Observed CSE (validation)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
@@ -163,7 +163,7 @@ print("starting loops")
 
 
 it <- 1
-for (it in 1:10) {
+for (it in 1:3) {
   
   rm(trNAm1C)
   gc()
@@ -195,7 +195,7 @@ for (it in 1:10) {
 	LcpLoopDF.train = LcpLoopDF[TrainingPairs,]
 	LcpLoopDF.valid = LcpLoopDF[-TrainingPairs,]
 
-	LCP_RF = randomForest(FST_lin ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF.train)
+	LCP_RF = randomForest(CSE ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP, importance=TRUE, na.action=na.omit, data=LcpLoopDF.train)
 
 assign(paste0("LCP_RF", it), LCP_RF )
 
@@ -210,12 +210,12 @@ gc()
 
 RSQ = tail(LCP_RF$rsq ,1 )
 RMSE = sqrt(tail(LCP_RF$mse ,1 ))
-RMSE2 = sqrt(((predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$FST_lin)^2))
-MAE = mean(abs(LCP_RF$predicted - LcpLoopDF.train$FST_lin))
-MAE2 = mean(abs(predict(LCP_RF, LcpLoopDF.train) - LcpLoopDF.train$FST_lin))
-MAE3 = mean(abs(predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$FST_lin))
-Cor1 = cor(predict(LCP_RF, LcpLoopDF.train), LcpLoopDF.train$FST_lin)
-Cor2 = cor(predict(LCP_RF, LcpLoopDF.valid), LcpLoopDF.valid$FST_lin)
+RMSE2 = sqrt(((predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$CSE)^2))
+MAE = mean(abs(LCP_RF$predicted - LcpLoopDF.train$CSE))
+MAE2 = mean(abs(predict(LCP_RF, LcpLoopDF.train) - LcpLoopDF.train$CSE))
+MAE3 = mean(abs(predict(LCP_RF, LcpLoopDF.valid) - LcpLoopDF.valid$CSE))
+Cor1 = cor(predict(LCP_RF, LcpLoopDF.train), LcpLoopDF.train$CSE)
+Cor2 = cor(predict(LCP_RF, LcpLoopDF.valid), LcpLoopDF.valid$CSE)
 
 RSQ_vec   = append(RSQ_vec, RSQ)
 RMSE_vec   = append(RMSE_vec, RMSE)
@@ -246,34 +246,34 @@ print(paste0("end of loop for iteration #", it))
 
 }                 
 
-save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,".RData"))
+save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,".RData"))
 
+d = data.frame(RSQ = RSQ_vec, RMSE = RMSE_vec, RMSE2 = RMSE2_vec, MAE = MAE_vec, MAE2 = MAE2_vec, MAE3_vec, Cor1 = Cor1_vec,  Cor2 = Cor2_vec)
 
-d = data.frame(RSQ = RSQ_vec, RMSE = RMSE_vec, RMSE2 = RMSE2_vec, MAE = MAE_vec, MAE2 = MAE2_vec, MAE3 = MAE3_vec, Cor1 = Cor1_vec,  Cor2 = Cor2_vec) 
-write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run", run, "_ValidationTable.csv"), row.names =FALSE)
+write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run", run, "_ValidationTable.csv"), row.names =FALSE)
 
 RF0 = Straight_RF
 RF1 = LCP_RF1 
 RF2 = LCP_RF2 
 RF3 = LCP_RF3 
-RF4 = LCP_RF4 
-RF5 = LCP_RF5 
-RF6 = LCP_RF6 
-RF7 = LCP_RF7
-RF8 = LCP_RF8
-RF9 = LCP_RF9
-RF10 = LCP_RF10
+#RF4 = LCP_RF4 
+#RF5 = LCP_RF5 
+#RF6 = LCP_RF6 
+#RF7 = LCP_RF7
+#RF8 = LCP_RF8
+#RF9 = LCP_RF9
+#RF10 = LCP_RF10
 resist0 = StraightPred
 resist1 = pred1 
 resist2 = pred2 
 resist3 = pred3 
-resist4 = pred4 
-resist5 = pred5 
-resist6 = pred6 
-resist7 = pred7
-resist8 = pred8
-resist9 = pred9
-resist10 = pred1
+#resist4 = pred4 
+#resist5 = pred5 
+#resist6 = pred6 
+#resist7 = pred7
+#resist8 = pred8
+#resist9 = pred9
+#resist10 = pred1
 
 #Best iteration based on Cor2
 pos_max = which.max(Cor2_vec)
@@ -282,24 +282,24 @@ best_it = pos_max - 1
 RF = paste0("RF", best_it)
 ResistanceMap = paste0("resist", best_it)
 
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,"_BestCor2_Pred_it",best_it,".pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,"_BestCor2_Pred_it",best_it,".pdf"), 5, 5)
 plot(get(ResistanceMap))
 dev.off()
 
-fit = lm(get(RF)$predicted ~ LcpLoopDF.train$FST_lin)
+fit = lm(get(RF)$predicted ~ LcpLoopDF.train$CSE)
 adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,"_BestCor2_TrainingScatter_it", best_it, ".pdf"), 5, 5)
-plot(LcpLoopDF.train$FST_lin,get(RF)$predicted,  xlab ="Observed FST (train)", ylab="Predicted FST")
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,"_BestCor2_TrainingScatter_it", best_it, ".pdf"), 5, 5)
+plot(LcpLoopDF.train$CSE, get(RF)$predicted,  xlab ="Observed CSE (train)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
-fit = lm(predict(get(RF), LcpLoopDF.valid) ~ LcpLoopDF.valid$FST_lin)
+fit = lm(predict(get(RF), LcpLoopDF.valid) ~ LcpLoopDF.valid$CSE)
 adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
-plot(LcpLoopDF.valid$FST_lin, predict(get(RF), LcpLoopDF.valid),  xlab ="Observed FST (valid)", ylab="Predicted FST")
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
+plot(LcpLoopDF.valid$CSE, predict(get(RF), LcpLoopDF.valid),  xlab ="Observed CSE (valid)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/LinFSTData_Run",run,"_BestCor2_ImpVars_it",best_it,".pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/CSEData_Run",run,"_BestCor2_ImpVars_it",best_it,".pdf"), 5, 5)
 varImpPlot(get(RF))
 dev.off()

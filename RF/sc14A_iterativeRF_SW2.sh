@@ -13,7 +13,7 @@
 # sbatch   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc14A_iterativeRF_SW2.sh  
 
 
-module load Apps/R/3.3.2-generic
+module load Apps/R/3.4.4-foss-2018a-X11-20180131
 
 module load Rpkgs/RGDAL/1.2-5
 

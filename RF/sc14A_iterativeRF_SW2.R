@@ -1,6 +1,6 @@
 #Building iterative RF model with SW2 (11 points)
 
-run=5
+run=6
 
 library("sp")
 library("spatstat")
