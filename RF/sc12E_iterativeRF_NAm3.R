@@ -115,13 +115,14 @@ StraightMeanDF.valid = StraightMeanDF[-TrainingPairs,]
 
 set.seed(NULL)
 
-#Tuning RF for 
+#Tuning RF for straight lines 
 tune_x <- StraightMeanDF.train[,1:29]
 tune_y <- StraightMeanDF.train[,29]
-bestmtry <- tuneRF(x, y, stepFactor=1.5, improve=1e-5, ntree=500)
+bestmtry <- tuneRF(tune_x, tune_y, stepFactor=1.5, improve=1e-5, ntree=500)
 mtry_opt <- bestmtry[,"mtry"][which.min(bestmtry[,"OOBError"])]
 
 Straight_RF = randomForest(FST_lin ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + GeoDist, importance=TRUE, mtry = mtry_opt, na.action=na.omit, data=StraightMeanDF.train)
+
 
 gc()
 
@@ -156,17 +157,15 @@ Cor1_vec  = c(Cor1)
 Cor2_vec  = c(Cor2)
 
 fit = lm(Straight_RF$predicted ~ StraightMeanDF.train$FST_lin)
-adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run",run,"_StraightRF_TrainingScatter.pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run",run,"_StraightRF_TrainingScatter.pdf"), 5, 5)
 plot(StraightMeanDF.train$FST_lin, Straight_RF$predicted,  xlab ="Observed FST (training)", ylab="Predicted FST")
-legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+legend("bottomright", legend=c(paste0("Pearson correlation = ", Cor2)), cex=0.7)
 dev.off()
 
 fit = lm(predict(Straight_RF, StraightMeanDF.valid) ~ StraightMeanDF.valid$FST_lin)
-adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run",run,"_StraightRF_ValidScatter.pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run",run,"_StraightRF_ValidScatter.pdf"), 5, 5)
 plot(StraightMeanDF.valid$FST_lin, predict(Straight_RF, StraightMeanDF.valid),  xlab ="Observed FST (validation)", ylab="Predicted FST")
-legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+legend("bottomright", legend=c(paste0("Pearson correlation = ", Cor2)), cex=0.7)
 dev.off()
 
 
@@ -178,12 +177,13 @@ print("first prediction resistance surface done")
 pred.cond <- 1/StraightPred #build conductance surface
 
 #Prepare points for use in least cost path loops
-P.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/NAmRF3_points_list.csv", sep=",", header=T)
-P.coordinates1 <- G.table[,c(3,2)]
-P.points <- SpatialPoints(P.table[,c(3,2)])  # ... converted into a spatial object
-proj4string(P.points) <- crs.geo  
-
-NumPoints = length(P.points)
+P.points1 <- SpatialPoints(G.table[,c(7,6)])
+P.points2 <- SpatialPoints(G.table[,c(9,8)])
+proj4string(P.points1) <- crs.geo
+proj4string(P.points2) <- crs.geo
+  
+#figure out how to replace 38 with a variable
+NumPoints = 38
 
 #get parallelization set up
 nw <- detectCores()
@@ -209,7 +209,7 @@ print("starting loops")
 
 
 it <- 1
-for (it in 1:3) {
+for (it in 1:2) {
   
   rm(trNAm1C)
   gc()
@@ -226,7 +226,7 @@ for (it in 1:3) {
 
 
   LcpLoop <- foreach(r=1:NumPairs, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
-	Ato <- shortestPath(trNAm1C, P.points[pointlist[r,1]] ,P.points[pointlist[r,2]]  , output="SpatialLines")
+	Ato <- shortestPath(trNAm1C, P.points1[r], P.points2[r]  , output="SpatialLines")
         cbind (  pointlist[r,1] ,  pointlist[r,2]  , raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
 
 }
@@ -299,16 +299,16 @@ print(paste0("end of loop for iteration #", it))
 
 }                 
 
-save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_withGeoDistFull_Run",run,".RData"))
+save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_withGeoDistFull_Run",run,".RData"))
 
 
 d = data.frame(RSQ = RSQ_vec, RMSE = RMSE_vec, RMSE2 = RMSE2_vec, MAE = MAE_vec, MAE2 = MAE2_vec, MAE3 = MAE3_vec, Cor1 = Cor1_vec,  Cor2 = Cor2_vec) 
-write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run", run, "_ValidationTable.csv"), row.names =FALSE)
+write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run", run, "_ValidationTable.csv"), row.names =FALSE)
 
 RF0 = Straight_RF
 RF1 = LCP_RF1 
 RF2 = LCP_RF2 
-RF3 = LCP_RF3 
+#RF3 = LCP_RF3 
 #RF4 = LCP_RF4 
 #RF5 = LCP_RF5 
 #RF6 = LCP_RF6 
@@ -319,7 +319,7 @@ RF3 = LCP_RF3
 resist0 = StraightPred
 resist1 = pred1 
 resist2 = pred2 
-resist3 = pred3 
+#resist3 = pred3 
 #resist4 = pred4 
 #resist5 = pred5 
 #resist6 = pred6 
@@ -335,24 +335,24 @@ best_it = pos_max - 1
 RF = paste0("RF", best_it)
 ResistanceMap = paste0("resist", best_it)
 
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run",run,"_BestCor2_Pred_it",best_it,".pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run",run,"_BestCor2_Pred_it",best_it,".pdf"), 5, 5)
 plot(get(ResistanceMap))
 dev.off()
 
 fit = lm(get(RF)$predicted ~ LcpLoopDF.train$FST_lin)
-adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run",run,"_BestCor2_TrainingScatter_it", best_it, ".pdf"), 5, 5)
+#adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run",run,"_BestCor2_TrainingScatter_it", best_it, ".pdf"), 5, 5)
 plot(LcpLoopDF.train$FST_lin,get(RF)$predicted,  xlab ="Observed FST (train)", ylab="Predicted FST")
-legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+#legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
 fit = lm(predict(get(RF), LcpLoopDF.valid) ~ LcpLoopDF.valid$FST_lin)
-adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run",run,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
+#adjr2 = round(summary(fit)$adj.r.squared, digits=3)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run",run,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
 plot(LcpLoopDF.valid$FST_lin, predict(get(RF), LcpLoopDF.valid),  xlab ="Observed FST (valid)", ylab="Predicted FST")
-legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
+#legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12D/LinFSTData_Run",run,"_BestCor2_ImpVars_it",best_it,".pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12E/LinFSTData_Run",run,"_BestCor2_ImpVars_it",best_it,".pdf"), 5, 5)
 varImpPlot(get(RF))
 dev.off()
