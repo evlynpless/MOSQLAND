@@ -105,11 +105,9 @@ set.seed(NULL)
 
 #check these
 tune_x <- StraightMeanDF.train[,names(env)]
-tune_y <- StraightMeanDF.train[,c("FST_Lin")]
-
-#Tuning RF for straight lines
-tune_x <- StraightMeanDF.train[,1:28]
-tune_y <- StraightMeanDF.train[,29]
+tune_y <- StraightMeanDF.train[,c("FST_lin")]
+#tune_x <- StraightMeanDF.train[,1:28]
+#tune_y <- StraightMeanDF.train[,29]
 bestmtry <- tuneRF(tune_x, tune_y, stepFactor=1.5, improve=1e-5, ntree=500)
 mtry_opt <- bestmtry[,"mtry"][which.min(bestmtry[,"OOBError"])]
 
@@ -233,6 +231,10 @@ for (it in 1:2) {
   LcpLoop.train <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
   Ato <- shortestPath(trNAm1C, P.points1.train[r], P.points2.train[r]  , output="SpatialLines")
         cbind (raster::extract(env,  Ato     , fun=mean, na.rm=TRUE)
+
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_afterLcpLoopTrain.RData")
+
+
 
 #Extract mean value from LCP for testing data
 
