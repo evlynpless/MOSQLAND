@@ -173,7 +173,7 @@ P.points1.train <- SpatialPoints(Train.table[,c(8,7)])
 P.points2.train <- SpatialPoints(Train.table[,c(10,9)])
 proj4string(P.points1.train) <- crs.geo
 proj4string(P.points2.train) <- crs.geo
-Numpoints.train <- length(P.points1.train)
+NumPairs.train <- length(P.points1.train)
 
 
 #Prepare points for use in least cost path loops - Testing
@@ -181,12 +181,12 @@ P.points1.test <- SpatialPoints(Test.table[,c(8,7)])
 P.points2.test <- SpatialPoints(Test.table[,c(10,9)])
 proj4string(P.points1.test) <- crs.geo
 proj4string(P.points2.test) <- crs.geo
-Numpoints.test		    <- length(P.points1.test)
+NumPairs.test		    <- length(P.points1.test)
 
   
 #For now update NumPoints based on how many points you're running
 #figure out how to replace 38 with a variable
-#NumPoints = 38
+NumPoints = 38
 
 #get parallelization set up
 nw <- detectCores()
@@ -197,15 +197,16 @@ registerDoMC(cores=nw)       # is create forks of the data good; for one node ma
 print("cores registerred")
 
 # create list for iteration
-#a=c() 
-#for (x in 1:(NumPoints-1)) {      
- # for (y in (x+1):NumPoints) {   
-# a = rbind (a, c(x,y) )
-#}
-#}
+#is it ok if it's too long bc indexing doesn't really matter?
+a=c() 
+for (x in 1:(NumPoints-1)) {      
+  for (y in (x+1):NumPoints) {   
+ a = rbind (a, c(x,y) )
+}
+}
 
-#FT=a[,1] != a[,2]
-#pointlist=a[ which(FT),]
+FT=a[,1] != a[,2]
+pointlist=a[ which(FT),]
 
 
 print("starting loops")
@@ -230,9 +231,9 @@ for (it in 1:2) {
 
   LcpLoop.train <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
   Ato <- shortestPath(trNAm1C, P.points1.train[r], P.points2.train[r]  , output="SpatialLines")
-        cbind (raster::extract(env,  Ato     , fun=mean, na.rm=TRUE)
+        cbind (pointlist[r,1] ,  pointlist[r,2], raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_afterLcpLoopTrain.RData")
+}
 
 
 
@@ -240,20 +241,19 @@ save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm
 
   LcpLoop.test <- foreach(r=1:NumPairs.test, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
   Ato <- shortestPath(trNAm1C, P.points1.test[r], P.points2.test[r]  , output="SpatialLines")
-        cbind (raster::extract(env,  Ato     , fun=mean, na.rm=TRUE)
-
+        cbind (pointlist[r,1] ,  pointlist[r,2], raster::extract(env,  Ato     , fun=mean, na.rm=TRUE))
 
 }
 
 
 #Add geo distance and FST to the datasets
 	LcpLoopDF.train <- as.data.frame(LcpLoop.train)
-	LcpLoopDF.train$GeoDist <- DistVar
+	LcpLoopDF.train$GeoDist <- DistVar.train
 	LcpLoopDF.train$FST_lin <- Train.table$FST_lin
 
         LcpLoopDF.test <- as.data.frame(LcpLoop.test)
-        LcpLoopDF.test$GeoDist <- DistVar
-        LcpLoopDF.test$FST_lin = Train.table$FST_lin
+        LcpLoopDF.test$GeoDist <- DistVar.test
+        LcpLoopDF.test$FST_lin = Test.table$FST_lin
 
 	tune_x <- LcpLoopDF.train[,1:28]
 	tune_y <- LcpLoopDF.train[,29]
@@ -360,7 +360,7 @@ dev.off()
 fit = lm(predict(get(RF), LcpLoopDF.test) ~ LcpLoopDF.test$FST_lin)
 #adjr2 = round(summary(fit)$adj.r.squared, digits=3)
 pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Run",foldnum,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
-plot(LcpLoopDF.valid$FST_lin, predict(get(RF), LcpLoopDF.valid),  xlab ="Observed FST* (valid)", ylab="Predicted FST")
+plot(LcpLoopDF.test$FST_lin, predict(get(RF), LcpLoopDF.test),  xlab ="Observed FST* (valid)", ylab="Predicted FST")
 #legend("bottomright", legend=c(paste0("Adj. R^2 = ", adjr2)), cex=0.7)
 dev.off()
 
