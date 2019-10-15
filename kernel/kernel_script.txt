@@ -1,0 +1,47 @@
+#Kernel rasters generated locally on R
+#Here's the script for future reference
+
+#Goal is to make kernel density map from coordinates, with dimensions below
+#extent      : -113.5, -79, 24, 36.5  (xmin, xmax, ymin, ymax)
+#dimensions  : 1500, 4140, 6210000  (nrow, ncol, ncell)
+#projection : stored in crs.geo
+#See GPP or other surface for example
+
+#following https://www.samuelbosch.com/2014/02/creating-kernel-density-estimate-map-in.html
+#Giuseppe updated it for meters rather than degrees
+
+library("KernSmooth")
+library("raster")
+library(rgdal)
+
+records <- read.csv("NAmRF3_points_list.csv")
+coordinates_wgs84 <- records[,2:3]
+coordinates(coordinates_wgs84) <- ~lon+lat
+proj4string(coordinates_wgs84)=CRS("+init=epsg:4326")
+
+# create a raster projected in meter and get the extend in the Equidistant projection
+#EPSG:102005 USA_Contiguous_Equidistant_Conic
+# +proj=eqdc +lat_0=39 +lon_0=-96 +lat_1=33 +lat_2=45 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
+coordinates_meter <- spTransform(coordinates_wgs84,CRS("+proj=eqdc +lat_0=39 +lon_0=-96 +lat_1=33 +lat_2=45 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"))
+reaster_test = raster(nrows=4140, ncols=1500, xmn=-113.5, xmx=-79, ymn=24, ymx=36.5, vals=1, crs="+init=epsg:4326" )
+projected_raster <- projectRaster(reaster_test, crs = "+proj=eqdc +lat_0=39 +lon_0=-96 +lat_1=33 +lat_2=45 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"  , res=1000)
+ext= extent(projected_raster)
+
+# compute the 2D binned kernel density estimate
+#ask Giuseppe about gridsize and range.x?
+
+est <- bkde2D(coordinates_meter@coords,
+              bandwidth=c(50000,50000),  # 200 000 is in meter  so 200 km  
+              gridsize=c(1545,3590),
+              range.x=list(c(ext[1] ,ext[2] ),c(ext[3],ext[4])))
+
+# create raster
+est.raster = raster(list(x=est$x1,y=est$x2, z=est$fhat))
+projection(est.raster) <- "+proj=eqdc +lat_0=39 +lon_0=-96 +lat_1=33 +lat_2=45 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"
+
+est.raster_wgs84 <- projectRaster(est.raster, crs = "+init=epsg:4326"  , res=0.008333333333)
+est.raster_wgs84_crop = crop ( est.raster_wgs84 , extent ( -113.5 , -79 , 24 , 36.5 )  )
+
+# the  est.raster_wgs84_crop as extent slithly different that the other raster , I would export to tif and adjust with gdal_edit.py 
+
+writeRaster(est.raster_wgs84_crop, "kernel_50m", format = "GTiff")

@@ -12,7 +12,7 @@ library("doMC")
 
 #load prepared raster stack for North America
 
-load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/rasterstack_image_withKernel.RData")
+load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_rasterstack_image_withKernel.RData")
 
 rmr=function(x){
 ## function to truly delete raster and temporary files associated with them
@@ -49,4 +49,4 @@ for(i in 1:10){
 }
 
 
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/sc15_pt1.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/sc15_pt1_withKernel.RData")
