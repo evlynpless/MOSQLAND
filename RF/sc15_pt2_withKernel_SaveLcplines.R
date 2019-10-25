@@ -199,17 +199,37 @@ for (it in 1:6) {
 #Extract mean value from LCP for training data
 
 
-LcpLoop.train <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
-  Ato <- shortestPath(trNAm1C, P.points1.train[r], P.points2.train[r]  , output="SpatialLines")
-        raster::extract(env,  Ato     , fun=mean, na.rm=TRUE)
+Ato.all.train <- foreach(r=1:NumPairs.train, .combine='+', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
+  shortestPath(trNAm1C, P.points1.train[r], P.points2.train[r]  , output="SpatialLines")
 }
+
+print("Ato.all.train complete")
+
+assign(paste0("Ato.all.train", it), Ato.all.train )
+
+  LcpLoop.train <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
+      raster::extract(env,  Ato.all.train[r]     , fun=mean, na.rm=TRUE)
+}
+
+print("LcpLoop.train complete")
+
+
 
 #Extract mean value from LCP for testing data
 
-  LcpLoop.test <- foreach(r=1:NumPairs.test, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
-  Ato <- shortestPath(trNAm1C, P.points1.test[r], P.points2.test[r]  , output="SpatialLines")
-        raster::extract(env,  Ato     , fun=mean, na.rm=TRUE)
+Ato.all.test <- foreach(r=1:NumPairs.test, .combine='+', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
+  shortestPath(trNAm1C, P.points1.test[r], P.points2.test[r]  , output="SpatialLines")
 }
+
+print("Ato.all.test complete")
+
+assign(paste0("Ato.all.test", it), Ato.all.test )
+
+  LcpLoop.test <- foreach(r=1:NumPairs.test, .combine='rbind', .packages=c('raster', 'gdistance')  ,   .inorder=TRUE   ) %dopar% {
+  raster::extract(env,  Ato.all.test[r]     , fun=mean, na.rm=TRUE)
+}
+
+print("LcpLoop.test complete")
 
 
 
