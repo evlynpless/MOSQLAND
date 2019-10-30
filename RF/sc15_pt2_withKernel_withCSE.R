@@ -82,24 +82,24 @@ StraightMean.train <- raster::extract(env, spatial.p.train, fun=mean, na.rm=TRUE
 
 StraightMeanDF.train <- as.data.frame(StraightMean.train)
 
-StraightMeanDF.train$FST_lin <- Train.table$FST_lin
+StraightMeanDF.train$CSE <- Train.table$CSE
 
 #For testing
 StraightMean.test <- raster::extract(env, spatial.p.test, fun=mean, na.rm=TRUE)
 
 StraightMeanDF.test <- as.data.frame(StraightMean.test)
 
-StraightMeanDF.test$FST_lin <- Test.table$FST_lin
+StraightMeanDF.test$CSE <- Test.table$CSE
 
 set.seed(NULL)
 
 #check these
 tune_x <- StraightMeanDF.train[,names(env)]
-tune_y <- StraightMeanDF.train[,c("FST_lin")]
+tune_y <- StraightMeanDF.train[,c("CSE")]
 bestmtry <- tuneRF(tune_x, tune_y, stepFactor=1.5, improve=1e-5, ntree=500)
 mtry_opt <- bestmtry[,"mtry"][which.min(bestmtry[,"OOBError"])]
 
-Straight_RF = randomForest(FST_lin ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, importance=TRUE, mtry = mtry_opt, na.action=na.omit, data=StraightMeanDF.train)
+Straight_RF = randomForest(CSE ~   arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, importance=TRUE, mtry = mtry_opt, na.action=na.omit, data=StraightMeanDF.train)
 
 gc()
 
@@ -116,13 +116,13 @@ Cor2_vec  = c()
 #Validation parameters
 RSQ = tail(Straight_RF$rsq ,1 )
 RMSE = sqrt(tail(Straight_RF$mse ,1 ))
-RMSE2 = sqrt(mean((predict(Straight_RF, StraightMeanDF.test) - StraightMeanDF.test$FST_lin)^2))
-MAE = mean(abs(Straight_RF$predicted - StraightMeanDF.train$FST_lin))
-MAE2 =  mean(abs(predict(Straight_RF, StraightMeanDF.train) - StraightMeanDF.train$FST_lin))
-MAE3 = mean(abs(predict(Straight_RF, StraightMeanDF.test) - StraightMeanDF.test$FST_lin))
-#Cor1 = cor(predict(Straight_RF, StraightMeanDF.train), StraightMeanDF.train$FST_lin)
-Cor1 = cor(Straight_RF$predicted, StraightMeanDF.train$FST_lin)
-Cor2 = cor(predict(Straight_RF, StraightMeanDF.test), StraightMeanDF.test$FST_lin)
+RMSE2 = sqrt(mean((predict(Straight_RF, StraightMeanDF.test) - StraightMeanDF.test$CSE)^2))
+MAE = mean(abs(Straight_RF$predicted - StraightMeanDF.train$CSE))
+MAE2 =  mean(abs(predict(Straight_RF, StraightMeanDF.train) - StraightMeanDF.train$CSE))
+MAE3 = mean(abs(predict(Straight_RF, StraightMeanDF.test) - StraightMeanDF.test$CSE))
+#Cor1 = cor(predict(Straight_RF, StraightMeanDF.train), StraightMeanDF.train$CSE)
+Cor1 = cor(Straight_RF$predicted, StraightMeanDF.train$CSE)
+Cor2 = cor(predict(Straight_RF, StraightMeanDF.test), StraightMeanDF.test$CSE)
 
 #Add straight line parameters to the vectors
 RSQ_vec   = c(RSQ)
@@ -134,15 +134,15 @@ MAE3_vec = c(MAE3)
 Cor1_vec  = c(Cor1)
 Cor2_vec  = c(Cor2)
 
-fit = lm(Straight_RF$predicted ~ StraightMeanDF.train$FST_lin)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold",foldnum,"_StraightRF_TrainingScatter.pdf"), 5, 5)
-plot(StraightMeanDF.train$FST_lin, Straight_RF$predicted,  xlab ="Observed FST* (training)", ylab="Predicted FST")
+fit = lm(Straight_RF$predicted ~ StraightMeanDF.train$CSE)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_StraightRF_TrainingScatter.pdf"), 5, 5)
+plot(StraightMeanDF.train$CSE, Straight_RF$predicted,  xlab ="Observed CSE (training)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(Cor1,3))), cex=0.7)
 dev.off()
 
-fit = lm(predict(Straight_RF, StraightMeanDF.test) ~ StraightMeanDF.test$FST_lin)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold",foldnum,"_StraightRF_ValidScatter.pdf"), 5, 5)
-plot(StraightMeanDF.test$FST_lin, predict(Straight_RF, StraightMeanDF.test),  xlab ="Observed FST (testing)", ylab="Predicted FST")
+fit = lm(predict(Straight_RF, StraightMeanDF.test) ~ StraightMeanDF.test$CSE)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_StraightRF_ValidScatter.pdf"), 5, 5)
+plot(StraightMeanDF.test$CSE, predict(Straight_RF, StraightMeanDF.test),  xlab ="Observed CSE (testing)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(Cor2,3))), cex=0.7)
 dev.off()
 
@@ -214,17 +214,17 @@ LcpLoop.train <- foreach(r=1:NumPairs.train, .combine='rbind', .packages=c('rast
 
 
 	LcpLoopDF.train <- as.data.frame(LcpLoop.train)
-	LcpLoopDF.train$FST_lin <- Train.table$FST_lin
+	LcpLoopDF.train$CSE <- Train.table$CSE
 
         LcpLoopDF.test <- as.data.frame(LcpLoop.test)
-        LcpLoopDF.test$FST_lin = Test.table$FST_lin
+        LcpLoopDF.test$CSE = Test.table$CSE
 
 	tune_x <- LcpLoopDF.train[,names(env)]
-	tune_y <- LcpLoopDF.train[,c("FST_lin")]
+	tune_y <- LcpLoopDF.train[,c("CSE")]
 	bestmtry <- tuneRF(tune_x, tune_y, stepFactor=1.5, improve=1e-5, ntree=500)
 	mtry_opt <- bestmtry[,"mtry"][which.min(bestmtry[,"OOBError"])]
 
-LCP_RF = randomForest(FST_lin ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, importance=TRUE, mtry=mtry_opt, na.action=na.omit, data=LcpLoopDF.train)
+LCP_RF = randomForest(CSE ~  arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf +  MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, importance=TRUE, mtry=mtry_opt, na.action=na.omit, data=LcpLoopDF.train)
 
 assign(paste0("LCP_RF", it), LCP_RF )
 
@@ -240,13 +240,13 @@ gc()
 #add validation parameters here
 RSQ = tail(LCP_RF$rsq ,1 )
 RMSE = sqrt(tail(LCP_RF$mse ,1 ))
-RMSE2 = sqrt(mean((predict(LCP_RF, LcpLoopDF.test) - LcpLoopDF.test$FST_lin)^2))
-MAE = mean(abs(LCP_RF$predicted - LcpLoopDF.train$FST_lin))
-MAE2 =  mean(abs(predict(LCP_RF, LcpLoopDF.train) - LcpLoopDF.train$FST_lin))
-MAE3 = mean(abs(predict(LCP_RF, LcpLoopDF.test) - LcpLoopDF.test$FST_lin))
-#Cor1 = cor(predict(LCP_RF, LcpLoopDF.train), LcpLoopDF.train$FST_lin)
-Cor1 = cor(LCP_RF$predicted, LcpLoopDF.train$FST_lin)
-Cor2 = cor(predict(LCP_RF, LcpLoopDF.test), LcpLoopDF.test$FST_lin)
+RMSE2 = sqrt(mean((predict(LCP_RF, LcpLoopDF.test) - LcpLoopDF.test$CSE)^2))
+MAE = mean(abs(LCP_RF$predicted - LcpLoopDF.train$CSE))
+MAE2 =  mean(abs(predict(LCP_RF, LcpLoopDF.train) - LcpLoopDF.train$CSE))
+MAE3 = mean(abs(predict(LCP_RF, LcpLoopDF.test) - LcpLoopDF.test$CSE))
+#Cor1 = cor(predict(LCP_RF, LcpLoopDF.train), LcpLoopDF.train$CSE)
+Cor1 = cor(LCP_RF$predicted, LcpLoopDF.train$CSE)
+Cor2 = cor(predict(LCP_RF, LcpLoopDF.test), LcpLoopDF.test$CSE)
 
 
 RSQ_vec   = append(RSQ_vec, RSQ)
@@ -279,7 +279,7 @@ print(paste0("end of loop for iteration #", it))
 }  
 
 d = data.frame(RSQ = RSQ_vec, RMSE = RMSE_vec, RMSE2 = RMSE2_vec, MAE = MAE_vec, MAE2 = MAE2_vec, MAE3 = MAE3_vec, Cor1 = Cor1_vec,  Cor2 = Cor2_vec) 
-write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold", foldnum, "_ValidationTable.csv"), row.names =FALSE)
+write.csv(d, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold", foldnum, "_ValidationTable.csv"), row.names =FALSE)
 
 RF0 = Straight_RF
 RF1 = LCP_RF1 
@@ -304,6 +304,7 @@ resist6 = pred6
 #resist9 = pred9
 #resist10 = pred10
 
+
 #Best iteration based on Cor2
 pos_max = which.max(Cor2_vec)
 
@@ -311,26 +312,28 @@ best_it = pos_max - 1
 RF = paste0("RF", best_it)
 ResistanceMap = paste0("resist", best_it)
 
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold",foldnum,"_BestCor2_Pred_it",best_it,".pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_BestCor2_Pred_it",best_it,".pdf"), 5, 5)
 plot(get(ResistanceMap))
 dev.off()
 
-fit = lm(get(RF)$predicted ~ LcpLoopDF.train$FST_lin)
+writeRaster(get(ResistanceMap), paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_BestCor2_Pred_it",best_it,".tif"), options=c("COMPRESS=DEFLATE "),formats=GTiff,overwrite=TRUE)
+
+fit = lm(get(RF)$predicted ~ LcpLoopDF.train$CSE)
 #adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold",foldnum,"_BestCor2_TrainingScatter_it", best_it, ".pdf"), 5, 5)
-plot(LcpLoopDF.train$FST_lin,get(RF)$predicted,  xlab ="Observed FST* (train)", ylab="Predicted FST")
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_BestCor2_TrainingScatter_it", best_it, ".pdf"), 5, 5)
+plot(LcpLoopDF.train$CSE, get(RF)$predicted,  xlab ="Observed CSE (train)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(Cor1,3))), cex=0.7)
 dev.off()
 
-fit = lm(predict(get(RF), LcpLoopDF.test) ~ LcpLoopDF.test$FST_lin)
+fit = lm(predict(get(RF), LcpLoopDF.test) ~ LcpLoopDF.test$CSE)
 #adjr2 = round(summary(fit)$adj.r.squared, digits=3)
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold",foldnum,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
-plot(LcpLoopDF.test$FST_lin, predict(get(RF), LcpLoopDF.test),  xlab ="Observed FST* (test)", ylab="Predicted FST")
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_BestCor2_ValidScatter_it", best_it,".pdf"), 5, 5)
+plot(LcpLoopDF.test$CSE, predict(get(RF), LcpLoopDF.test),  xlab ="Observed  CSE (test)", ylab="Predicted CSE")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(Cor2,3))), cex=0.7)
 dev.off()
 
-pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFSTData_Fold",foldnum,"_BestCor2_ImpVars_it",best_it,".pdf"), 5, 5)
+pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSEData_Fold",foldnum,"_BestCor2_ImpVars_it",best_it,".pdf"), 5, 5)
 varImpPlot(get(RF))
 dev.off()
 
-save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/sc15_pt2_withKernel",foldnum,".RData"))
+save.image(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/sc15_pt2_withKernel_withCSE",foldnum,".RData"))
