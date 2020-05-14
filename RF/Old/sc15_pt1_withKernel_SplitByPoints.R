@@ -1,3 +1,5 @@
+#exactly the same as sc15_pt1_withKernel.R
+
 library("sp")
 library("spatstat")
 library("maptools")
@@ -10,11 +12,12 @@ library("foreach")
 library("doParallel")
 library("doMC")
 
-#Load prepared raster stack for North America
+#load prepared raster stack for North America
+
 load("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc12_rasterstack_image_withKernel.RData")
 
-#To save memory, defining function to truly delete raster and temporary files associated with them
 rmr=function(x){
+## function to truly delete raster and temporary files associated with them
 if(class(x)=="RasterLayer"&grepl("^/tmp",x@file@name)&fromDisk(x)==T){
 file.remove(x@file@name,sub("grd","gri",x@file@name))
 rm(x)
@@ -22,16 +25,21 @@ rm(x)
 }
 
 
-#Upload pairwise genetic distance data
+###############################################
+#Plot lines as SpatialLines:
+###############################################
+
+#Plot straigt lines for first iteration of RF
+
 G.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/FST_list_NAmRF3.csv", sep=",", header=T)
 
-#Randomly shuffle the pairwise genetic distance data
+#Randomly shuffle the data
 yourData<-G.table[sample(nrow(G.table)),]
 
 #Create 10 equally size folds
 folds <- cut(seq(1,nrow(yourData)),breaks=10,labels=FALSE)
 
-#Rename the 10 folds so they can be accessed later
+#Perform 10 fold cross validation
 for(i in 1:10){
   #Segement your data by fold using the which() function 
   testIndexes <- which(folds==i,arr.ind=TRUE)

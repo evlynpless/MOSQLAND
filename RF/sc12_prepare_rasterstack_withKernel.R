@@ -1,5 +1,6 @@
-#Creating North America raster stack for use in iterative RF model
+#Purpose: creating North America raster stack for use in iterative RF model
 
+#Download packages
 library("sp")
 library("spatstat")
 library("maptools")
@@ -9,11 +10,15 @@ library("gdistance")
 library("SDraw")
 library("tidyverse")
 
-crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") # ... add coordinate system
+#Add coordinate system
+crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
 ###############################################
 #Create raster stack
 ###############################################
+
+#Upload each raster and define its coordinate system
+#Multiply by 1 is a trick to save memory later
 
 aridI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/NAm_clip/AI_annual_NAmClip2_Int16.tif")
 arid = aridI*1
@@ -131,9 +136,10 @@ kernel100I = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/kern
 kernel100 = kernel100I*1
 proj4string(kernel100) <- crs.geo
 
-
+#Create raster stack named env
 env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel100)
 
+#Rename each raster in env so they can be referenced later
 names(env) [1] <- "arid"
 names(env) [2] <- "access"
 names(env) [3] <- "prec"

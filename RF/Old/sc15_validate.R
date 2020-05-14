@@ -19,9 +19,13 @@ Full.table <- read.table(file="/project/fas/powell/esp38/dataproces/MOSQLAND/con
 
 #upload the resistance surface
 
-mean_surfaceI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/LinFST_best_preds/Avg_surface_final.tif")
+mean_surfaceI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSE_best_preds/CSEData_mean.tif")
 mean_surface = mean_surfaceI*1
 proj4string(mean_surface) <- crs.geo
+
+std_surfaceI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSE_best_preds/CSEData_stdev.tif")
+std_surface = std_surfaceI*1
+proj4string(std_surface) <- crs.geo
 
 #convert it to transition matrix
   
@@ -61,4 +65,12 @@ LcpLoop <- foreach(r=1:NumPairs, .combine='rbind', .packages=c('raster', 'gdista
 print("LcpLoop loop complete")
 
 
-save.image("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/sc15_validation.RData")
+save.image("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/sc15_validation_CSE.RData")
+
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSE_best_preds/CSEData_mean.pdf", 5, 5)
+plot(mean_surface)
+dev.off()
+
+pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc15/CSE_best_preds/CSEData_stdev.pdf", 5, 5)
+plot(std_surface)
+dev.off()
