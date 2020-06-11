@@ -32,14 +32,14 @@ export point=$point
 
 #Evie: I can  update FST_list_NAmRF3.csv so it has the new Houston data
 
-echo "index,V1,V2,locality1,locality2,lat1,long1,lat2,long2,FST_lin,CSE,Resd" > $OUT_TXT/FST_list_NAmRF3_Test$point.csv
+echo "index,V1,V2,locality1,locality2,lat1,long1,lat2,long2,FST_lin,CSE" > $OUT_TXT/FST_list_NAmRF3_Test$point.csv
 awk -v point=$point  -F ","  '{ if ($2==point  || $3==point  ) print   }' $IN_TXT/FST_list_NAmRF4_Houston_linux.csv  >> $OUT_TXT/FST_list_NAmRF3_Test$point.csv
 awk -v point=$point  -F ","  '{ if ($2!=point  && $3!=point  ) print   }' $IN_TXT/FST_list_NAmRF4_Houston_linux.csv  > $OUT_TXT/FST_list_NAmRF3_Trai$point.csv
 
 #### create the start-end points for each line
-
-awk -F "," '{ if(NR>1) printf ("%f %f\n%f %f\n%s\n" , $(NF-5), $(NF-6), $(NF-3), $(NF-4), "NaN NaN" ) }' $OUT_TXT/FST_list_NAmRF3_Test$point.csv > $OUT_TXT/FST_line_NAmRF3_Test$point.txt
-awk -F "," '{ if(NR>1) printf ("%f %f\n%f %f\n%s\n" , $(NF-5), $(NF-6), $(NF-3), $(NF-4), "NaN NaN" ) }' $OUT_TXT/FST_list_NAmRF3_Trai$point.csv > $OUT_TXT/FST_line_NAmRF3_Trai$point.txt 
+#Note this part had to be updated when I switched to NAmRF4_Houston
+awk -F "," '{ if(NR>1) printf ("%f %f\n%f %f\n%s\n" , $(NF-4), $(NF-5), $(NF-2), $(NF-3), "NaN NaN" ) }' $OUT_TXT/FST_list_NAmRF3_Test$point.csv > $OUT_TXT/FST_line_NAmRF3_Test$point.txt
+awk -F "," '{ if(NR>1) printf ("%f %f\n%f %f\n%s\n" , $(NF-4), $(NF-5), $(NF-2), $(NF-3), "NaN NaN" ) }' $OUT_TXT/FST_list_NAmRF3_Trai$point.csv > $OUT_TXT/FST_line_NAmRF3_Trai$point.txt 
 
 ### enter in grass and get the mean under straight line
 ## grass78  -f -text --tmp-location  -c $IN_MSQ/consland/ARIDITY/NAm_clip/AI_annual_NAmClip2_Int16.tif    <<'EOF'
@@ -100,6 +100,7 @@ awk -F "," '{ if (NR>1)  print $1   }'   $OUT_TXT/FST_list_NAmRF3_Trai$point.csv
 LINE=$1 
 v.to.rast  input=FST_line_NAmRF3_Trai1 where="cat == $LINE " output=raster$LINE use="cat" --o   2>/dev/null 
 
+#ask giuseppe about this line - why does it stop running for me when it hits line 666?
 echo $LINE","$(for rast in arid access prec meantemp humandensity friction mintemp Needleleaf EvBroadleaf DecBroadleaf MiscTrees Shrubs Herb Crop Flood Urban Snow Barren Water Slope Altitude PET DailyTempRange maxtemp AnnualTempRange precwet precdry GPP ; do  r.univar -t map=$rast    zones=raster$LINE separator=comma 2>/dev/null | awk  -F , \' { if (NR==2)  printf  ("%s," , $8 ) } \'  ; done )$(  r.univar -t map=kernel100   zones=raster$LINE  separator=comma 2>/dev/null  | awk  -F ,   \' { if (NR==2)  printf  ("%s\\n",$8 ) } \' )
 
 ' _   >> $OUT_TXT/FST_list_NAmRF3_PredictTrai$point.csv 
@@ -125,13 +126,11 @@ EOF
 rm -fr $RAM/grassdb$point
 
 
-R --vanilla --no-readline   -q  << 'EOF'
-
+R --vanilla --no-readline   -q  <<'EOF'
 
 library("randomForest")
 library("rgdal")
 library("raster")
-library("sp")
 library("gdistance")
 
 # library("tidyverse")
@@ -152,6 +151,8 @@ names(Env.table.train) <- c("index","arid","access","prec","mean.temp","human.de
 names(Env.table.test) <-  c("index","arid","access","prec","mean.temp","human.density","friction","min.temp","Needleleaf","EvBroadleaf","DecBroadleaf","MiscTrees","Shrubs","Herb","Crop","Flood","Urban","Snow","Barren","Water","Slope","Altitude","PET","DailyTempRange","max.temp","AnnualTempRange","prec.wet","prec.dry","GPP","kernel100") 
 
 ### Add genetic distance column to the new data frame
+
+##Before this, the tables should get reordered according to index - otherwise CSE won't work
 
 Env.table.test$CSE   <- Gen.table.test$CSE  
 Env.table.train$CSE  <- Gen.table.train$CSE  
@@ -184,3 +185,4 @@ writeRaster(trNAm1,'/project/fas/powell/esp38/dataproces/MOSQLAND/consland/Train
 EOF
  
 exit 
+
