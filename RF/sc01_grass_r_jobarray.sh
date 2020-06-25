@@ -1,17 +1,17 @@
 #!/bin/bash
 #SBATCH -p day
-#SBATCH -J sc01_grass_r.sh
+#SBATCH -J sc01_grass_r_jobarray.sh
 #SBATCH -n 1 -c 16 -N 1
 #SBATCH -t 24:00:00 
-#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r.sh.%J.out
-#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r.sh.%J.err
+#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r_jobarray.sh.%A_%a.out
+#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_jobarray.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
+#SBATCH --array=1
 #SBATCH --mem=80G
 
-####### for point in  $(seq 1 38 )  ; do sbatch --export=point=$point   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r.sh ; done
-####### for point in  $(seq 1 1  )  ; do sbatch --export=point=$point   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r.sh ; done
-######  bash /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r.sh
+####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_jobarray.sh
+###### 
 
 module load GEOS/3.6.2-foss-2018a-Python-3.6.4
 module load GDAL/3.1.0-foss-2018a-Python-3.6.4
@@ -29,8 +29,8 @@ export RAM=/dev/shm
 export CPU=$SLURM_CPUS_ON_NODE
 
 #### evie output location
-export OUT_TXT=/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting
-export point=$point
+export OUT_TXT=/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc
+export point=$SLURM_ARRAY_TASK_ID
 ###  export point=1
 
 ###  spliting in training and testing. Select only one point (all the pairwise from that point)  for the testing
@@ -142,12 +142,12 @@ library("gdistance")
 
 point <- Sys.getenv(c('point'))
 
-Env.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_PredictTrai" , point , ".csv"), sep=",", header=T)
+Env.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_PredictTrai" , point , ".csv"), sep=",", header=T)
 ## select only index and CSE
-Gen.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_Trai", point         , ".csv"), sep=",", header=T)[,c( 1, 11)]
+Gen.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai", point         , ".csv"), sep=",", header=T)[,c( 1, 11)]
 
-Env.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_PredictTest" , point , ".csv"), sep=",", header=T)
-Gen.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_Test", point         , ".csv"), sep=",", header=T)[,c( 1, 11)]
+Env.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfscr_", point, "/FST_list_NAmRF3_PredictTest" , point , ".csv"), sep=",", header=T)
+Gen.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Test", point         , ".csv"), sep=",", header=T)[,c( 1, 11)]
 
 ###  Rename columns 
 
@@ -193,7 +193,7 @@ paste ("Cor2" , Cor2 )
 pred.cond <-  1 /  predict(env, Straight_RF)  
 
 #come back to this
-writeRaster(pred.cond, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/prediction.tif"), options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
+writeRaster(pred.cond, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/prediction.tif"), options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 
 # writeRaster(trNAm1,"/gpfs/loomis/project/sbsc/ga254/dataproces/MOSQLAND/TrainingTesting/trNAm1.tif",options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 
@@ -248,11 +248,11 @@ library("gdistance")
 point <- Sys.getenv(c('point'))
 ITER  <- Sys.getenv(c('ITER'))
 
-Env.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_Iter",ITER,"LeastPathTrai",point,".csv"), sep=",", header=T)
-Gen.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_Trai",point,".csv"), sep=",", header=T)[,c( 1, 11)]
+Env.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Iter",ITER,"LeastPathTrai",point,".csv"), sep=",", header=T)
+Gen.table.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai",point,".csv"), sep=",", header=T)[,c( 1, 11)]
 
-Env.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_Iter",ITER,"LeastPathTest",point,".csv"), sep=",", header=T) 
-Gen.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/FST_list_NAmRF3_Test",point, ".csv"), sep=",", header=T)[,c( 1, 11)]
+Env.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Iter",ITER,"LeastPathTest",point,".csv"), sep=",", header=T) 
+Gen.table.test <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Test",point, ".csv"), sep=",", header=T)[,c( 1, 11)]
 
 ### Add genetic distance column to the new data frame
 
@@ -300,7 +300,7 @@ paste ( "ITER" , ITER , "Cor2" , Cor2 )
 pred.cond <- 1 / predict(env, LeastPath_RF) 
 
 #come back to this
-writeRaster(pred.cond, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesting_", point, "/prediction.tif"), options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
+writeRaster(pred.cond, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/prediction.tif"), options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 EOF
 
 pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1 -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk$ITER.tif
