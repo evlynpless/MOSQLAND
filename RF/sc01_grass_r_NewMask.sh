@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH -p day
-#SBATCH -J sc01_grass_r_rfsrc.sh
+#SBATCH -J sc01_grass_r_NewMask.sh
 #SBATCH -n 1 -c 16 -N 1
 #SBATCH -t 24:00:00 
-#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r_rfsrc.sh.%A_%a.out
-#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc.sh.%A_%a.err
+#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r_NewMask.sh.%A_%a.out
+#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_NewMask.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
 #SBATCH --array=1
@@ -34,6 +34,8 @@ export point=$SLURM_ARRAY_TASK_ID
 ###  export point=1
 
 ###  spliting in training and testing. Select only one point (all the pairwise from that point)  for the testing
+
+#Evie: I can  update FST_list_NAmRF3.csv so it has the new Houston data
 
 echo "index,V1,V2,locality1,locality2,lat1,long1,lat2,long2,FST_lin,CSE,Resd" > ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv
 awk -v point=$point  -F ","  '{ if ($2==point || $3==point ) print }' $IN_TXT/FST_list_NAmRF4.csv  >> ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv
@@ -173,52 +175,36 @@ load(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/
 #Predictor variables are mean along straight lines through the rasters
 #Response variable is genetic distance
 
-Kernel.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F) 
-Kernel.vector <- as.vector(Kernel.train[,2])
-head(Kernel.vector)
-
 Straight_RF = rfsrc(CSE ~ arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + 
 Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, 
 importance=TRUE, na.action=c("na.omit"), data=Env.table.train)
 
 Straight_RF
 
-Rtrain = cor(Straight_RF$predicted, Env.table.train$CSE)
-paste ("Rtrain" , Rtrain ) 
+Cor1 = cor(Straight_RF$predicted, Env.table.train$CSE)
+Cor2 = cor((predict.rfsrc(Straight_RF, Env.table.test))$predicted, Env.table.test$CSE)
 
-Rtest = cor((predict.rfsrc(Straight_RF, Env.table.test))$predicted, Env.table.test$CSE)
-paste ("Rtest" , Rtest ) 
-
-RMSEtrain = sqrt(mean((Straight_RF$predicted - Env.table.train$CSE)^2))
-paste ("RMSEtrain" , RMSEtrain)
-
-RMSEtest = sqrt(mean((predict.rfsrc(Straight_RF, Env.table.test)$predicted - Env.table.test$CSE)^2))
-paste ("RMSEtest" , RMSEtest) 
-
-MAEtrain =  mean(abs(predict.rfsrc(Straight_RF, Env.table.train)$predicted - Env.table.train$CSE))
-paste ("MAEtrain" , MAEtrain) 
-
-MAEtest = mean(abs(predict.rfsrc(Straight_RF, Env.table.test)$predicted - Env.table.test$CSE))
-paste ("MAEtest" , MAEtest) 
+paste ("Cor1" , Cor1 )
+paste ("Cor2" , Cor2 )
 
 pred = predict.rfsrc(Straight_RF, value.raster, na.action = c("na.impute"))
 
-predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)
+#predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)
 
-predict.rast.mask <- mask(predict.rast, arid)
+#predict.rast.mask <- mask(predict.rast, arid)
 
-pred.cond <- 1/predict.rast
+#pred.cond <- 1/predict.rast
 
-#pred.cond <- 1/raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)
+pred.cond <- 1/raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)
 
 writeRaster(pred.cond, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/prediction.tif"), options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 
 EOF
 
 #Giuseppe suggestion
-#pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1  -m  path/arid.tif  -msknodata -9999   -nodata -1  -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk0.tif
+pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1  -m  path/arid.tif  -msknodata -9999   -nodata -1  -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk0.tif
 
-pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1 -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk0.tif
+#pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1 -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk0.tif
 
 rm ${OUT_TXT}_${point}/prediction.tif 
 cp ${OUT_TXT}_${point}/prediction_msk0.tif ${OUT_TXT}_${point}/prediction_msk.tif
@@ -308,40 +294,27 @@ importance=TRUE, na.action=c("na.omit"), data=Env.table.train)
 
 LeastPath_RF
 
-Rtrain  = cor(LeastPath_RF$predicted, Env.table.train$CSE)                         
-paste ( "ITER" , ITER , "Rtrain" , Rtrain )
-
-Rtest  = cor((predict.rfsrc(LeastPath_RF, Env.table.test))$predicted, Env.table.test$CSE)
-paste ( "ITER" , ITER , "Rtest" , Rtest )                              
-
-RMSEtrain = sqrt(mean((LeastPath_RF$predicted - Env.table.train$CSE)^2))
-paste ( "ITER" , ITER ,  "RMSEtrain" , RMSEtrain )
-
-RMSEtest = sqrt(mean((predict.rfsrc(LeastPath_RF, Env.table.test)$predicted - Env.table.test$CSE)^2))
-paste ( "ITER" , ITER , "RMSEtest" , RMSEtest)
-
-MAEtrain =  mean(abs(predict.rfsrc(LeastPath_RF, Env.table.train)$predicted - Env.table.train$CSE))
-paste ("ITER" , ITER , "MAEtrain" , MAEtrain)
-
-MAEtest = mean(abs(predict.rfsrc(LeastPath_RF, Env.table.test)$predicted - Env.table.test$CSE))
-paste ("ITER" , ITER , "MAEtest" , MAEtest) 
+Cor1 = cor(LeastPath_RF$predicted, Env.table.train$CSE)                         
+Cor2 = cor((predict.rfsrc(LeastPath_RF, Env.table.test))$predicted, Env.table.test$CSE)           
+                                                                               
+paste ( "ITER" , ITER , "Cor1" , Cor1 )                                                                           
+paste ( "ITER" , ITER , "Cor2" , Cor2 )                              
 
 pred = predict.rfsrc(LeastPath_RF, value.raster, na.action = c("na.impute"))
 
-predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)                                                                                          
+#predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)                                                                                          
+#predict.rast.mask <- mask(predict.rast, arid)     
 
-predict.rast.mask <- mask(predict.rast, arid)     
+#pred.cond <- 1/predict.rast
 
-pred.cond <- 1/predict.rast
-
-#pred.cond <- 1/raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5) 
+pred.cond <- 1/raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5) 
 
 writeRaster(pred.cond, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/prediction.tif"), options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 EOF
 
-#pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1  -m  path/arid.tif  -msknodata -9999   -nodata -1  -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk0.tif
+pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1  -m  path/arid.tif  -msknodata -9999   -nodata -1  -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk0.tif
 
-pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1 -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk$ITER.tif
+#pksetmask -co COMPRESS=DEFLATE -co ZLEVEL=9 -m ${OUT_TXT}_${point}/prediction.tif -msknodata -1 -p "<" -nodata -1 -i ${OUT_TXT}_${point}/prediction.tif -o ${OUT_TXT}_${point}/prediction_msk$ITER.tif
 
 rm ${OUT_TXT}_${point}/prediction.tif 
 cp ${OUT_TXT}_${point}/prediction_msk$ITER.tif ${OUT_TXT}_${point}/prediction_msk.tif
