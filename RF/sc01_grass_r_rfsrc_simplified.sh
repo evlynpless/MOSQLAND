@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH -p day
-#SBATCH -J sc01_grass_r_tune.sh
+#SBATCH -J sc01_grass_r_rfsrc.sh
 #SBATCH -n 1 -c 16 -N 1
 #SBATCH -t 24:00:00 
-#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r_tune.sh.%A_%a.out
-#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_tune.sh.%A_%a.err
+#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r_rfsrc.sh.%A_%a.out
+#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
-#SBATCH --array=1
+#SBATCH --array=1-37
 #SBATCH --mem=80G
 
 ####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_rfsrc.sh
@@ -125,11 +125,13 @@ EOF
 
 paste -d ","  <(awk -F , '{  if(NR>1) print $2 }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv | uniq )   <(gdallocationinfo -geoloc -wgs84  -valonly   $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif  $(awk -F , '{  if(NR>1) print  $(NF-5), $(NF-6) }'   ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv | uniq )) >  ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTest$point.csv 
 
-awk -F , '{ if(NR>1) print  $(NF-5), $(NF-6) }'   ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq > ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt 
+awk -F , '{ if(NR>1) print  $(NF-5), $(NF-6) } END { print $(NF-3), $(NF-4)  }  '   ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq > ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt 
 paste -d ","  <(awk -F , '{ if(NR>1) print $2 }'  ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq) <(gdallocationinfo -geoloc -wgs84  -valonly   $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif  < ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt )   >  ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTrai$point.csv
+
+
+
 rm ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt  
 
-#missing Tampa - need to get this from lines NF-4 and NF-3
 
 echo start to process in R 
 
@@ -162,8 +164,8 @@ names(Env.table.test) <-  c("index","arid","access","prec","mean.temp","human.de
 Env.table.test  = merge (Env.table.test  ,  Gen.table.test  , by = "index" )
 Env.table.train = merge (Env.table.train ,  Gen.table.train , by = "index" )
 
-head(Env.table.train)  ### doble check if the merging is done correctly
-head(Env.table.test)   ### doble check if the merging is done correctly
+#head(Env.table.train)  ### doble check if the merging is done correctly
+#head(Env.table.test)   ### doble check if the merging is done correctly
 
 set.seed(NULL)
 
@@ -176,16 +178,48 @@ load(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/
 #Response variable is genetic distance
 
 Kernel.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F) 
-Kernel.vector <- as.vector(Kernel.train[,2])
-head(Kernel.vector)
+names(Kernel.train) <- c('V1', 'kernel') 
+Kernel.train[37,1] = 38
+nrow(Kernel.train)
+tail(Kernel.train)
 
-Straight_RF_tune = tune(CSE ~ arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + 
+Pairs.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
+tail(Pairs.train)
+
+Merge.train <- merge (Kernel.train , Pairs.train  , by = "V1" )
+Merge.train.sort <- Merge.train[order(Merge.train$index),]
+tail(Merge.train.sort)
+nrow(Merge.train)
+
+Kernel.Vector <- as.vector(Merge.train.sort[,"kernel"])
+tail(Kernel.Vector)
+str(Kernel.Vector)
+
+Kernel.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F)
+names(Kernel.train2) <- c('V2', 'kernel')
+Kernel.train2[37,1] = 38  #Change to 37 for 38th point
+tail(Kernel.train2)
+nrow(Kernel.train)
+
+Pairs.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
+head(Pairs.train2)
+
+Merge.train2 <- merge (Kernel.train2 , Pairs.train2  , by = "V2" )
+Merge.train2.sort <- Merge.train2[order(Merge.train2$index),]
+tail(Merge.train2.sort)
+nrow(Merge.train2)
+
+Kernel.Vector2 <- as.vector(Merge.train2.sort[,"kernel"])
+tail(Kernel.Vector2)
+
+Kernel.Vector.Final <- 1/(pmax(Kernel.Vector, Kernel.Vector2))
+head(Kernel.Vector.Final)
+tail(Kernel.Vector.Final)
+length(Kernel.Vector.Final)
+                  
+Straight_RF = rfsrc(CSE ~ arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + 
 Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, 
-importance=TRUE, na.action=c("na.omit"), data=Env.table.train)
-
-Straight_RF_tune
-
-Straight_RF = rfsrc(CSE ~ arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, importance=TRUE, na.action=c("na.omit"), mtry = Straight_RF_tune$optimal[["mtry"]], nodesize =  Straight_RF_tune$optimal[["nodesize"]]),  data=Env.table.train)    
+importance=TRUE, na.action=c("na.omit"), case.wt=Kernel.Vector.Final, data=Env.table.train)
 
 Straight_RF
 
@@ -194,22 +228,22 @@ plot(Straight_RF, m.target = NULL, plots.one.page = TRUE, sorted = TRUE, verbose
 dev.off()
 
 Rtrain = cor(Straight_RF$predicted, Env.table.train$CSE)
-paste ("Rtrain" , Rtrain ) 
+paste (" ITER 0 RtrainVar " , Rtrain ) 
 
 Rtest = cor((predict.rfsrc(Straight_RF, Env.table.test))$predicted, Env.table.test$CSE)
-paste ("Rtest" , Rtest ) 
+paste (" ITER 0 RtestVar " , Rtest ) 
 
 RMSEtrain = sqrt(mean((Straight_RF$predicted - Env.table.train$CSE)^2))
-paste ("RMSEtrain" , RMSEtrain)
+paste (" ITER 0 RMSEtrainVar " , RMSEtrain)
 
 RMSEtest = sqrt(mean((predict.rfsrc(Straight_RF, Env.table.test)$predicted - Env.table.test$CSE)^2))
-paste ("RMSEtest" , RMSEtest) 
+paste (" ITER 0 RMSEtestVar " , RMSEtest) 
 
 MAEtrain =  mean(abs(predict.rfsrc(Straight_RF, Env.table.train)$predicted - Env.table.train$CSE))
-paste ("MAEtrain" , MAEtrain) 
+paste (" ITER 0 MAEtrainVar " , MAEtrain) 
 
 MAEtest = mean(abs(predict.rfsrc(Straight_RF, Env.table.test)$predicted - Env.table.test$CSE))
-paste ("MAEtest" , MAEtest) 
+paste (" ITER 0  MAEtestVar " , MAEtest) 
 
 pred = predict.rfsrc(Straight_RF, value.raster, na.action = c("na.impute"))
 
@@ -238,7 +272,7 @@ cp ${OUT_TXT}_${point}/prediction_msk0.tif ${OUT_TXT}_${point}/prediction_msk.ti
 awk -F "," '{ if(NR>1) print $1 , $(NF-5),  $(NF-6) ,  $(NF-3),  $(NF-4) }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv | uniq > ${OUT_TXT}_${point}/FST_line_NAmRF3_StartStopTest$point.txt
 awk -F "," '{ if(NR>1) print $1 , $(NF-5),  $(NF-6) ,  $(NF-3),  $(NF-4) }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq > ${OUT_TXT}_${point}/FST_line_NAmRF3_StartStopTrai$point.txt
 
-for ITER in $(seq 1 2 ) ; do  
+for ITER in $(seq 1 10 ) ; do  
 export ITER=$ITER
 
 echo Start Iteration $ITER  GRASS 
@@ -299,8 +333,8 @@ names(Env.table.test) <-  c("index","arid","access","prec","mean.temp","human.de
 Env.table.test =  merge (Env.table.test , Gen.table.test  , by = "index" )
 Env.table.train = merge (Env.table.train, Gen.table.train , by = "index" )
 
-head(Env.table.train)  ### doble check if the merging is done correctly
-head(Env.table.test)  ### doble check if the merging is done correctly
+#head(Env.table.train)  ### doble check if the merging is done correctly
+#head(Env.table.test)  ### doble check if the merging is done correctly
 
 set.seed(NULL)
 
@@ -312,9 +346,38 @@ load(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/
 #Predictor variables are mean along the least cost path lines through the rasters
 #Response variable is genetic distance
 
+Kernel.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F)
+names(Kernel.train) <- c('V1', 'kernel')
+Kernel.train[37,1] = 38 #Change to 37 for 38th run                                                                                                                                                                  tail(Kernel.train)                                                                                                                                                                                                      
+Pairs.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
+tail(Pairs.train)
+
+Merge.train <- merge (Kernel.train , Pairs.train  , by = "V1" )
+Merge.train.sort <- Merge.train[order(Merge.train$index),]
+tail(Merge.train.sort)
+
+Kernel.Vector <- as.vector(Merge.train.sort[,"kernel"])
+tail(Kernel.Vector)
+
+Kernel.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F)
+names(Kernel.train2) <- c('V2', 'kernel')
+Kernel.train2[37,1] = 38 #Change to 37 for 38th point
+tail(Kernel.train2)
+
+Pairs.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
+head(Pairs.train2)
+
+Merge.train2 <- merge (Kernel.train2 , Pairs.train2  , by = "V2" )
+Merge.train2.sort <- Merge.train2[order(Merge.train2$index),]
+tail(Merge.train2.sort)
+
+Kernel.Vector2 <- as.vector(Merge.train2.sort[,"kernel"])
+
+Kernel.Vector.Final <- 1/(pmax(Kernel.Vector + Kernel.Vector2))
+
 LeastPath_RF = rfsrc(CSE ~ arid + access  +   prec  +   mean.temp  +   human.density  +   friction + min.temp + Needleleaf + EvBroadleaf + DecBroadleaf + MiscTrees + 
 Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, 
-importance=TRUE, na.action=c("na.omit"), data=Env.table.train)
+importance=TRUE, na.action=c("na.omit"), case.wt=Kernel.Vector.Final, data=Env.table.train)
 
 LeastPath_RF
 
@@ -323,22 +386,22 @@ plot(LeastPath_RF, m.target = NULL, plots.one.page = TRUE, sorted = TRUE, verbos
 dev.off()  
 
 Rtrain  = cor(LeastPath_RF$predicted, Env.table.train$CSE)                         
-paste ( "ITER" , ITER , "Rtrain" , Rtrain )
+paste ( "ITER" , ITER , "RtrainVar" , Rtrain )
 
 Rtest  = cor((predict.rfsrc(LeastPath_RF, Env.table.test))$predicted, Env.table.test$CSE)
-paste ( "ITER" , ITER , "Rtest" , Rtest )                              
+paste ( "ITER" , ITER , "RtestVar" , Rtest )                              
 
 RMSEtrain = sqrt(mean((LeastPath_RF$predicted - Env.table.train$CSE)^2))
-paste ( "ITER" , ITER ,  "RMSEtrain" , RMSEtrain )
+paste ( "ITER" , ITER ,  "RMSEtrainVar" , RMSEtrain )
 
 RMSEtest = sqrt(mean((predict.rfsrc(LeastPath_RF, Env.table.test)$predicted - Env.table.test$CSE)^2))
-paste ( "ITER" , ITER , "RMSEtest" , RMSEtest)
+paste ( "ITER" , ITER , "RMSEtestVar" , RMSEtest)
 
 MAEtrain =  mean(abs(predict.rfsrc(LeastPath_RF, Env.table.train)$predicted - Env.table.train$CSE))
-paste ("ITER" , ITER , "MAEtrain" , MAEtrain)
+paste ("ITER" , ITER , "MAEtrainVar" , MAEtrain)
 
 MAEtest = mean(abs(predict.rfsrc(LeastPath_RF, Env.table.test)$predicted - Env.table.test$CSE))
-paste ("ITER" , ITER , "MAEtest" , MAEtest) 
+paste ("ITER" , ITER , "MAEtestVar" , MAEtest) 
 
 pred = predict.rfsrc(LeastPath_RF, value.raster, na.action = c("na.impute"))
 
