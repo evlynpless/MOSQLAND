@@ -7,7 +7,7 @@
 #SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
-#SBATCH --array=1-38
+#SBATCH --array=38
 #SBATCH --mem=80G
 
 ####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_rfsrc.sh
@@ -178,10 +178,11 @@ load(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/
 
 Kernel.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F) 
 names(Kernel.train) <- c('V1', 'kernel') 
-if (point < 38) {
-Kernel.train[37,1] = 38
-} else { Kernel.train[37,1] = 37
-} 
+#if (point < 38) {
+#Kernel.train[37,1] = 38
+#} else { Kernel.train[37,1] = 37
+#}
+Kernel.train[37,1] = 37 
 nrow(Kernel.train)
 tail(Kernel.train)
 
@@ -199,10 +200,11 @@ str(Kernel.Vector)
 
 Kernel.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F)
 names(Kernel.train2) <- c('V2', 'kernel')
-if (point < 38) {
-Kernel.train2[37,1] = 38
-} else { Kernel.train2[37,1] = 37
-} 
+#if (point < 38) {
+#Kernel.train2[37,1] = 38
+#} else { Kernel.train2[37,1] = 37
+#}
+Kernel.train[37,1] = 37 
 tail(Kernel.train2)
 
 
@@ -377,10 +379,11 @@ load(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/
 
 Kernel.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F)
 names(Kernel.train) <- c('V1', 'kernel')
-if (point < 38) {
-  Kernel.train[37,1] = 38
-} else { Kernel.train[37,1] = 37
-}                                                                                                                                                                  
+#if (point < 38) {
+ # Kernel.train[37,1] = 38
+#} else { Kernel.train[37,1] = 37
+#}                      
+Kernel.train[37,1] = 37                                                                                                                                           
 tail(Kernel.train)                                                                                                                                                                                                      
 Pairs.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
 tail(Pairs.train)
@@ -394,10 +397,11 @@ tail(Kernel.Vector)
 
 Kernel.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_KernelTrai" , point , ".csv"), sep=",", header=F)
 names(Kernel.train2) <- c('V2', 'kernel')
-if (point < 38) {
-  Kernel.train2[37,1] = 38
-} else { Kernel.train2[37,1] = 37
-}
+#if (point < 38) {
+ # Kernel.train2[37,1] = 38
+#} else { Kernel.train2[37,1] = 37
+#}
+Kernel.train[37,1] = 37
 tail(Kernel.train2)
 
 Pairs.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
