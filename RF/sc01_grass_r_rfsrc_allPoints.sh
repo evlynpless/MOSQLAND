@@ -95,12 +95,12 @@ r.external  input=$RAM/grassdbAll/KernelRas_100m_fnl.tif  output=kernel100    --
 
 echo predictors added
 
-v.in.lines input=${OUT_TXT}/FST_line_NAmRF3_all.txt output=FST_line_NAmRF3_all.txt  separator=" " --overwrite
+v.in.lines input=${OUT_TXT}/FST_line_NAmRF3_all.txt output=FST_line_NAmRF3_all  separator=" " --overwrite
 ## v.in.lines input=${OUT_TXT}_${point}/FST_line_NAmRF3_Trai$point.txt output=FST_line_NAmRF3_Trai$point  separator=" " --overwrite
 
 echo addtable
 
-v.db.addtable map=FST_line_NAmRF3_all.txt   
+v.db.addtable map=FST_line_NAmRF3_all   
 ## v.db.addtable map=FST_line_NAmRF3_Test$point   
 
 echo  extract mean for straight line in FST_line_NAmRF3_all.txt

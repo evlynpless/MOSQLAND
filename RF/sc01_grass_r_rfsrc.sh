@@ -7,7 +7,7 @@
 #SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
-#SBATCH --array=38
+#SBATCH --array=1
 #SBATCH --mem=80G
 
 ####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_rfsrc.sh
@@ -126,8 +126,18 @@ EOF
 paste -d ","  <(awk -F , '{  if(NR>1) print $2 }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv | uniq )   <(gdallocationinfo -geoloc -wgs84  -valonly   $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif  $(awk -F , '{  if(NR>1) print  $(NF-5), $(NF-6) }'   ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv | uniq )) >  ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTest$point.csv 
 
 awk -F , '{ if(NR>1) print  $(NF-5), $(NF-6) } END { print $(NF-3), $(NF-4)  }  '   ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq > ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt 
-paste -d ","  <(awk -F , '{ if(NR>1) print $2 }'  ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq) <(gdallocationinfo -geoloc -wgs84  -valonly   $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif  < ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt )   >  ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTrai$point.csv
 
+#paste -d ","  <(awk -F , '{ if(NR>1) print $2 }'  ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq) <(gdallocationinfo -geoloc -wgs84  -valonly   $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif  < ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt )   >  ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTrai$point.csv
+
+if [  $point -le 37    ] ; then  
+
+paste -d "," <(awk -F , '{ if(NR>1) print $2 } END {print 38 } ' ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq) <(gdallocationinfo -geoloc -wgs84 -valonly $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif < ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt ) > ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTrai$point.csv
+
+else
+
+paste -d "," <(awk -F , '{ if(NR>1) print $2 } END {print 37 } ' ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq) <(gdallocationinfo -geoloc -wgs84 -valonly $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif < ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt ) > ${OUT_TXT}_${point}/FST_list_NAmRF3_KernelTrai$point.csv
+
+paste  -d "," <(awk -F , '{ if(NR>1) print $2 } END {print 38 } '  ${OUT_TXT}_1/FST_list_NAmRF3_Trai1.csv | uniq  )  <(awk -F , '{ if(NR>1) print $2 } END {print 37 } '  ${OUT_TXT}_38/FST_list_NAmRF3_Trai38.csv | uniq   )
 
 
 rm ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt  
@@ -182,7 +192,7 @@ names(Kernel.train) <- c('V1', 'kernel')
 #Kernel.train[37,1] = 38
 #} else { Kernel.train[37,1] = 37
 #}
-Kernel.train[37,1] = 37 
+#Kernel.train[37,1] = 37 
 nrow(Kernel.train)
 tail(Kernel.train)
 
@@ -204,7 +214,7 @@ names(Kernel.train2) <- c('V2', 'kernel')
 #Kernel.train2[37,1] = 38
 #} else { Kernel.train2[37,1] = 37
 #}
-Kernel.train[37,1] = 37 
+#Kernel.train2[37,1] = 37 
 tail(Kernel.train2)
 
 
@@ -303,7 +313,7 @@ cp ${OUT_TXT}_${point}/prediction_msk0.tif ${OUT_TXT}_${point}/prediction_msk.ti
 awk -F "," '{ if(NR>1) print $1 , $(NF-5),  $(NF-6) ,  $(NF-3),  $(NF-4) }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv | uniq > ${OUT_TXT}_${point}/FST_line_NAmRF3_StartStopTest$point.txt
 awk -F "," '{ if(NR>1) print $1 , $(NF-5),  $(NF-6) ,  $(NF-3),  $(NF-4) }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq > ${OUT_TXT}_${point}/FST_line_NAmRF3_StartStopTrai$point.txt
 
-for ITER in $(seq 1 10 ) ; do  
+for ITER in $(seq 1 2 ) ; do  
 export ITER=$ITER
 
 echo Start Iteration $ITER  GRASS 
@@ -383,7 +393,7 @@ names(Kernel.train) <- c('V1', 'kernel')
  # Kernel.train[37,1] = 38
 #} else { Kernel.train[37,1] = 37
 #}                      
-Kernel.train[37,1] = 37                                                                                                                                           
+#Kernel.train[37,1] = 37                                                                                                                                           
 tail(Kernel.train)                                                                                                                                                                                                      
 Pairs.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
 tail(Pairs.train)
@@ -401,7 +411,7 @@ names(Kernel.train2) <- c('V2', 'kernel')
  # Kernel.train2[37,1] = 38
 #} else { Kernel.train2[37,1] = 37
 #}
-Kernel.train[37,1] = 37
+#Kernel.train2[37,1] = 37
 tail(Kernel.train2)
 
 Pairs.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
