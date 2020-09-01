@@ -7,7 +7,7 @@
 #SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
-#SBATCH --array=38
+#SBATCH --array=1
 #SBATCH --mem=80G
 
 ####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_rfsrc.sh
@@ -193,7 +193,7 @@ names(Kernel.train) <- c('V1', 'kernel')
 #Kernel.train[37,1] = 38
 #} else { Kernel.train[37,1] = 37
 #}
-Kernel.train[37,1] = 37 
+Kernel.train[37,1] = 38 
 nrow(Kernel.train)
 tail(Kernel.train)
 
@@ -215,7 +215,7 @@ names(Kernel.train2) <- c('V2', 'kernel')
 #Kernel.train2[37,1] = 38
 #} else { Kernel.train2[37,1] = 37
 #}
-Kernel.train2[37,1] = 37 
+Kernel.train2[37,1] = 38 
 tail(Kernel.train2)
 
 
@@ -246,64 +246,43 @@ Straight_RF = rfsrc(CSE ~ arid + access  +   prec  +   mean.temp  +   human.dens
 Shrubs + Herb + Crop + Flood + Urban + Snow + Barren + Water + Slope + Altitude + PET + DailyTempRange + max.temp + AnnualTempRange + prec.wet + prec.dry + GPP + kernel100, 
 importance=TRUE, na.action=c("na.omit"), case.wt=Kernel.Vector.Final, mtry = Straight_RF_tune$optimal[["mtry"]], nodesize =  Straight_RF_tune$optimal[["nodesize"]], data=Env.table.train)
 
-ITER = 0
-
-paste("ITER", ITER,  "Straight_RF")
+paste("ITER 0 Straight_RF")
 Straight_RF
 
-paste ("ITER", ITER, "VarImp")
+
 pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/ErrVIMP_iter0.pdf"), 7, 7)
 plot(Straight_RF, m.target = NULL, plots.one.page = TRUE, sorted = TRUE, verbose = TRUE)
 dev.off()
 
-
 Rtrain = cor(Straight_RF$predicted, Env.table.train$CSE)
-paste ("ITER", ITER, " RtrainVar " , Rtrain ) 
+paste (" ITER 0 RtrainVar " , Rtrain ) 
 
 #Turns out this is same as Rtrain
 Rtrain2 = cor((predict.rfsrc(Straight_RF, Env.table.train))$predicted, Env.table.train$CSE)
-paste ("ITER", ITER, "Rtrain2Var" , Rtrain2 )
+paste ("ITER 0 Rtrain2Var " , Rtrain2 )
 
 Rtest = cor((predict.rfsrc(Straight_RF, Env.table.test))$predicted, Env.table.test$CSE)
-paste ("ITER" , ITER, "RtestVar" , Rtest ) 
+paste (" ITER 0 RtestVar " , Rtest ) 
 
 RMSEtrain = sqrt(mean((Straight_RF$predicted - Env.table.train$CSE)^2))
-paste ("ITER", ITER, "RMSEtrainVar" , RMSEtrain)
+paste (" ITER 0 RMSEtrainVar " , RMSEtrain)
 
 RMSEtest = sqrt(mean((predict.rfsrc(Straight_RF, Env.table.test)$predicted - Env.table.test$CSE)^2))
-paste ("ITER", ITER, "RMSEtestVar" , RMSEtest) 
+paste (" ITER 0 RMSEtestVar " , RMSEtest) 
 
 MAEtrain =  mean(abs(predict.rfsrc(Straight_RF, Env.table.train)$predicted - Env.table.train$CSE))
-paste ("ITER ", ITER, "MAEtrainVar" , MAEtrain) 
+paste (" ITER 0 MAEtrainVar " , MAEtrain) 
 
 MAEtest = mean(abs(predict.rfsrc(Straight_RF, Env.table.test)$predicted - Env.table.test$CSE))
-paste ("ITER ", ITER, "MAEtestVar" , MAEtest) 
+paste (" ITER 0  MAEtestVar " , MAEtest) 
 
-
-#Define empty vectors
-#Rtrain_vec = c()
-#Rtrain2_vec = c()
-#Rtest_vec = c()
-#RMSEtrain_vec = c()
-#RMSEtest_vec = c()
-#MAEtrain_vec = c()
-#MAEtest_vec = c()
-
-#Rtrain_vec = c(Rtrain)
-#Rtrain2_vec = c(Rtrain2)
-#Rtest_vec = c(Rtest)
-#RMSEtrain_vec = c(RMSEtrain)
-#RMSEtest_vec = c(RMSEtest)
-#MAEtrain_vec = c(MAEtrain)
-#MAEtest_vec = c(MAEtest) 
-
-pred = predict.rfsrc(Straight_RF, value.raster, na.action = c("na.impute")) 
+pred = predict.rfsrc(Straight_RF, value.raster, na.action = c("na.impute"))
 
 predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)
 
 predict.rast.mask <- mask(predict.rast, arid)
 
-pred.cond <- 1/predict.rast.mask
+pred.cond <- 1/predict.rast
 
 pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/TrainingScatter_iter0.pdf"), 5, 5)
 plot(Env.table.train$CSE, Straight_RF$predicted,  xlab ="Observed CSE (training)", ylab="Predicted CSE")
@@ -417,7 +396,7 @@ names(Kernel.train) <- c('V1', 'kernel')
  # Kernel.train[37,1] = 38
 #} else { Kernel.train[37,1] = 37
 #}                      
-Kernel.train[37,1] = 37                                                                                                                                           
+Kernel.train[37,1] = 38                                                                                                                                           
 tail(Kernel.train)                                                                                                                                                                                                      
 Pairs.train <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
 tail(Pairs.train)
@@ -435,7 +414,7 @@ names(Kernel.train2) <- c('V2', 'kernel')
  # Kernel.train2[37,1] = 38
 #} else { Kernel.train2[37,1] = 37
 #}
-Kernel.train2[37,1] = 37
+Kernel.train2[37,1] = 38
 tail(Kernel.train2)
 
 Pairs.train2 <- read.table(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/FST_list_NAmRF3_Trai" , point , ".csv"), sep=",", header=T)
@@ -463,7 +442,6 @@ importance=TRUE, na.action=c("na.omit"), case.wt=Kernel.Vector.Final, mtry = Lea
 paste ( "ITER" , ITER , "LeastPath_RF" )  
 LeastPath_RF
 
-paste ("ITER", ITER, "VarImp")
 pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_", point, "/ErrVIMP_iter", ITER, ".pdf"), 7, 7)
 plot(LeastPath_RF, m.target = NULL, plots.one.page = TRUE, sorted = TRUE, verbose = TRUE)
 dev.off()  
@@ -489,21 +467,13 @@ paste ("ITER" , ITER , "MAEtrainVar" , MAEtrain)
 MAEtest = mean(abs(predict.rfsrc(LeastPath_RF, Env.table.test)$predicted - Env.table.test$CSE))
 paste ("ITER" , ITER , "MAEtestVar" , MAEtest) 
 
-#Rtrain_vec = append(Rtrain_vec, Rtrain)
-#Rtrain2_vec = append(Rtrain2_vec, Rtrain2)
-#Rtest_vec = append(Rtest_vec, Rtest)
-#RMSEtrain_vec = append(RMSEtrain_vec, RMSEtrain)
-#RMSEtest_vec = append(RMSEtest_vec, RMSEtest)
-#MAEtrain_vec = append(MAEtrain_vec, MAEtrain) 
-#MAEtest_vec = append(MAEtest_vec,MAEtest)
-
 pred = predict.rfsrc(LeastPath_RF, value.raster, na.action = c("na.impute"))
 
 predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5)                                                                                          
 
 predict.rast.mask <- mask(predict.rast, arid)     
 
-pred.cond <- 1/predict.rast.mask
+pred.cond <- 1/predict.rast
 
 #pred.cond <- 1/raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5) 
 
