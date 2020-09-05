@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -p day
-#SBATCH -J sc01_grass_r_rfsrc.sh
+#SBATCH -J sc01_grass_r_rfsrc_allPoints.sh
 #SBATCH -n 1 -c 16 -N 1
 #SBATCH -t 24:00:00 
 #SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc01_grass_r_rfsrc_allPoints.sh.%A_%a.out
@@ -232,18 +232,14 @@ pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc
 plot(Straight_RF, m.target = NULL, plots.one.page = TRUE, sorted = TRUE, verbose = TRUE)
 dev.off()
 
-R = cor(Straight_RF$predicted, Env.table$CSE)
-paste (" ITER 0 RVar " , R ) 
+R = cor(Straight_RF$predicted.oob, Env.table$CSE)
+paste ("ITER 0 RVar" , R )  
 
-#Why is this the same as R?
-R_Opt2 = cor((predict.rfsrc(Straight_RF, Env.table))$predicted, Env.table$CSE)
-paste (" ITER 0 R_Opt2_Var " , R_Opt2 )  
+RMSE = sqrt(mean((Straight_RF$predicted.oob - Env.table$CSE)^2))
+paste ("ITER 0 RMSEVar" , RMSE) 
 
-RMSE = sqrt(mean((Straight_RF$predicted - Env.table$CSE)^2))
-paste (" ITER 0 RMSEVar " , RMSE)
-
-MAE =  mean(abs(predict.rfsrc(Straight_RF, Env.table)$predicted - Env.table$CSE))
-paste (" ITER 0 MAEVar " , MAE) 
+MAE =  mean(abs(Straight_RF$predicted.oob - Env.table$CSE))
+paste ("ITER 0 MAEVar" , MAE) 
 
 pred = predict.rfsrc(Straight_RF, value.raster, na.action = c("na.impute"))
 
@@ -251,10 +247,10 @@ predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , 
 
 predict.rast.mask <- mask(predict.rast, arid)
 
-pred.cond <- 1/predict.rast
+pred.cond <- 1/predict.rast.mask
 
 pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/Scatter_iter0.pdf", 5, 5)
-plot(Env.table$CSE, Straight_RF$predicted,  xlab ="Observed CSE (training)", ylab="Predicted CSE")
+plot(Straight_RF$predicted.oob, Env.table$CSE, xlab ="Predicted CSE", ylab="Observed CSE")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(R,3))), cex=0.7)
 dev.off()
 
@@ -405,16 +401,13 @@ pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTesti
 plot(LeastPath_RF, m.target = NULL, plots.one.page = TRUE, sorted = TRUE, verbose = TRUE)
 dev.off()  
 
-R  = cor(LeastPath_RF$predicted, Env.table$CSE)                         
+R  = cor(LeastPath_RF$predicted.oob, Env.table$CSE)                         
 paste ( "ITER" , ITER , "RVar" , R )                              
 
-R_Opt2 = cor((predict.rfsrc(LeastPath_RF, Env.table))$predicted, Env.table$CSE)
-paste ( "ITER" , ITER , "R_Opt2_Var" , R_Opt2 ) 
-
-RMSE = sqrt(mean((LeastPath_RF$predicted - Env.table$CSE)^2))
+RMSE = sqrt(mean((LeastPath_RF$predicted.oob - Env.table$CSE)^2))
 paste ( "ITER" , ITER ,  "RMSEVar" , RMSE )
 
-MAE =  mean(abs(predict.rfsrc(LeastPath_RF, Env.table)$predicted - Env.table$CSE))
+MAE =  mean(abs(LeastPath_RF$predicted.oob - Env.table$CSE))
 paste ("ITER" , ITER , "MAEVar" , MAE)
 
 pred = predict.rfsrc(LeastPath_RF, value.raster, na.action = c("na.impute"))
@@ -423,12 +416,12 @@ predict.rast=raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , 
 
 predict.rast.mask <- mask(predict.rast, arid)     
 
-pred.cond <- 1/predict.rast
+pred.cond <- 1/predict.rast.mask
 
 #pred.cond <- 1/raster(vals=as.vector(pred$predicted),  nrows= 1500 , ncols=4140 , xmn=-113.5, xmx=-79, ymn=24, ymx=36.5) 
 
 pdf(paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/Scatter_iter", ITER, ".pdf"), 5, 5)
-plot(Env.table$CSE, LeastPath_RF$predicted,  xlab ="Observed CSE (training)", ylab="Predicted CSE")
+plot(LeastPath_RF$predicted.oob, Env.table$CSE,  xlab ="Predicted CSE", ylab="Observed CSE")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(R,3))), cex=0.7)
 dev.off()
 

@@ -7,7 +7,7 @@
 #SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc_testNewKernel.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
-#SBATCH --array=1
+#SBATCH --array=38
 #SBATCH --mem=80G
 
 ####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_rfsrc.sh
@@ -143,10 +143,16 @@ fi
 #paste  -d "," <(awk -F , '{ if(NR>1) print $2 } END {print 38 } '  ${OUT_TXT}_1/FST_list_NAmRF3_Trai1.csv | uniq  )  <(awk -F , '{ if(NR>1) print $2 } END {print 37 } '  ${OUT_TXT}_38/FST_list_NAmRF3_Trai38.csv | uniq   )
 
 
-rm ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt  
+#rm ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt  
+
+#point=3
+#paste -d "," <(awk -F , '{ if(NR>1) print $2 } END {print 38 } ' ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq) <(gdallocationinfo -geoloc -wgs84 -valonly $IN_MSQ/consland/kernel/KernelRas_100m_fnl.tif < ${OUT_TXT}_${point}/FST_list_NAmRF3_LatLongTrai$point.txt ) 
+
 
 
 echo start to process in R 
+
+exit
 
 R --vanilla --no-readline   -q  <<'EOF'
 
