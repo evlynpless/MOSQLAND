@@ -2,13 +2,13 @@
 #SBATCH -p day                                     
 #SBATCH --mem=100g                                
 #SBATCH -t 24:00:00                                
-#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc17_rasterstack.sh.%J.out                   
-#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc17_rasterstack.sh.%J.err                  
+#SBATCH -o /gpfs/scratch60/fas/powell/esp38/stdout/sc17_rasterstack_allKernels.sh.%J.out                   
+#SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc17_rasterstack_allKernels.sh.%J.err                  
 #SBATCH --mail-type=ALL                            
 #SBATCH --mail-user=evlyn.pless@yale.edu           
 #SBATCH --job-name=sc17_rasterstack.sh                                                                                        
 
-# sbatch   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc17_rasterstack.sh                                                     
+# sbatch   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc17_rasterstack_allKernels.sh                                                     
                  
 
 ulimit -c 0 
@@ -156,12 +156,24 @@ GPPI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/GPP/mnth/m
 GPP = GPPI*1
 proj4string(GPP) <- crs.geo
 
+kernel50I = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/kernel/KernelRas_50m_fnl.tif")
+kernel50 = kernel50I*1
+proj4string(kernel50) <- crs.geo
+
 kernel100I = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/kernel/KernelRas_100m_fnl.tif")
 kernel100 = kernel100I*1
 proj4string(kernel100) <- crs.geo
 
+kernel150I = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/kernel/KernelRas_150m_fnl.tif")
+kernel150 = kernel150I*1
+proj4string(kernel150) <- crs.geo
+
+kernel200I = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/kernel/KernelRas_200m_fnl.tif")
+kernel200 = kernel200I*1
+proj4string(kernel200) <- crs.geo
+
 #Create raster stack named env
-env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel100)
+env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel50, kernel100, kernel150, kernel200)
 
 #Rename each raster in env so they can be referenced later
 names(env) [1] <- "arid"
@@ -192,7 +204,10 @@ names(env) [25] <- "AnnualTempRange"
 names(env) [26] <- "prec.wet"
 names(env) [27] <- "prec.dry"
 names(env) [28] <- "GPP"
-names(env) [29] <- "kernel100"
+names(env) [29] <- "kernel50"
+names(env) [30] <- "kernel100" 
+names(env) [31] <- "kernel150" 
+names(env) [32] <- "kernel200" 
 
 print("raster stack done")
 
@@ -225,7 +240,10 @@ value.raster$AnnualTempRange = getValues(AnnualTempRange)
 value.raster$prec.wet = getValues(prec.wet)
 value.raster$prec.dry = getValues(prec.dry)
 value.raster$GPP = getValues(GPP)
-value.raster$kernel100 = getValues(kernel100)
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc17_rasterstack.RData")
+value.raster$kernel50 = getValues(kernel50)
+value.raster$kernel100 = getValues(kernel100) 
+value.raster$kernel150 = getValues(kernel150) 
+value.raster$kernel200 = getValues(kernel200) 
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc17_rasterstack_allKernels.RData")
 
 EOF

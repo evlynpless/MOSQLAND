@@ -9,13 +9,14 @@
 #SBATCH --job-name=sc17_rasterstack.sh                                                                                        
 
 # sbatch   /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc17_rasterstack.sh                                                     
-                 
+
+
+####This file is to prepare an RData Object containing the all the spatial (environmental) data for the the RF connectivity modeling script. The user will need to change the directories for the environmental data.                  
 
 ulimit -c 0 
 
 module load R/3.5.3-foss-2018a-X11-20180131
 module load GDAL/3.1.0-foss-2018a-Python-3.6.4
-module load Rpkgs/RGDAL/1.2-5 #not working
 module load Rpkgs/DOPARALLEL/1.0.3 #not working
 
 
@@ -23,16 +24,12 @@ R --vanilla -no-readline -q  << 'EOF'
 
 #Purpose: creating North America raster stack for use in iterative RF model
 
-#Download packages
+#Load packages
 library("sp")
-#library("spatstat")
-#library("maptools")
 library("raster")
 library("doParallel")
 library("rgdal")
-#library("gdistance")
-#library("SDraw")
-#library("tidyverse")
+
 
 #Add coordinate system
 crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
@@ -42,7 +39,7 @@ crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 ###############################################
 
 #Upload each raster and define its coordinate system
-#Multiply by 1 is a trick to save memory later
+#Multiply by 1 to save memory later
 
 aridI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/ARIDITY/NAm_clip/AI_annual_NAmClip2_Int16.tif")
 arid = aridI*1
@@ -194,7 +191,7 @@ names(env) [27] <- "prec.dry"
 names(env) [28] <- "GPP"
 names(env) [29] <- "kernel100"
 
-print("raster stack done")
+#Convert to dataframe so it can be read by GRASS tools
 
 value.raster = as.data.frame(getValues(arid))
 names(value.raster) = "arid"

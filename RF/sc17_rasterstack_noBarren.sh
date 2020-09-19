@@ -112,9 +112,9 @@ SnowI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/N
 Snow = SnowI*1
 proj4string(Snow) <- crs.geo
 
-BarrenI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_11_NAmClip2.tif")
-Barren = BarrenI*1
-proj4string(Barren) <- crs.geo
+#BarrenI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_11_NAmClip2.tif")
+#Barren = BarrenI*1
+#proj4string(Barren) <- crs.geo
 
 WaterI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/landcov/NAm_clip/consensus_full_class_12_NAmClip2.tif")
 Water = WaterI*1
@@ -161,7 +161,7 @@ kernel100 = kernel100I*1
 proj4string(kernel100) <- crs.geo
 
 #Create raster stack named env
-env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel100)
+env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Snow, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel100)
 
 #Rename each raster in env so they can be referenced later
 names(env) [1] <- "arid"
@@ -181,18 +181,18 @@ names(env) [14] <- "Crop"
 names(env) [15] <- "Flood"
 names(env) [16] <- "Urban"
 names(env) [17] <- "Snow"
-names(env) [18] <- "Barren"
-names(env) [19] <- "Water"
-names(env) [20] <- "Slope"
-names(env) [21] <- "Altitude"
-names(env) [22] <- "PET"
-names(env) [23] <- "DailyTempRange"
-names(env) [24] <- "max.temp"
-names(env) [25] <- "AnnualTempRange"
-names(env) [26] <- "prec.wet"
-names(env) [27] <- "prec.dry"
-names(env) [28] <- "GPP"
-names(env) [29] <- "kernel100"
+#names(env) [18] <- "Barren"
+names(env) [18] <- "Water"
+names(env) [19] <- "Slope"
+names(env) [20] <- "Altitude"
+names(env) [21] <- "PET"
+names(env) [22] <- "DailyTempRange"
+names(env) [23] <- "max.temp"
+names(env) [24] <- "AnnualTempRange"
+names(env) [25] <- "prec.wet"
+names(env) [26] <- "prec.dry"
+names(env) [27] <- "GPP"
+names(env) [28] <- "kernel100"
 
 print("raster stack done")
 
@@ -214,7 +214,7 @@ value.raster$Crop = getValues(Crop)
 value.raster$Flood = getValues(Flood)
 value.raster$Urban = getValues(Urban)
 value.raster$Snow = getValues(Snow)
-value.raster$Barren = getValues(Barren)
+#value.raster$Barren = getValues(Barren)
 value.raster$Water = getValues(Water)
 value.raster$Slope = getValues(Slope)
 value.raster$Altitude = getValues(Altitude)
@@ -226,6 +226,6 @@ value.raster$prec.wet = getValues(prec.wet)
 value.raster$prec.dry = getValues(prec.dry)
 value.raster$GPP = getValues(GPP)
 value.raster$kernel100 = getValues(kernel100)
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc17_rasterstack.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/RF/NAm_RF_3/sc17_rasterstack_noBarren.RData")
 
 EOF
