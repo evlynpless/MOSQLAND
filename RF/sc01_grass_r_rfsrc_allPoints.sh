@@ -252,7 +252,7 @@ pred.cond <- 1/predict.rast.mask
 pdf("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/Scatter_iter0.pdf", 5, 5)
 plot(Env.table$CSE, Straight_RF$predicted.oob, xlab ="Observed CSE", ylab="Predicted CSE")
 abline(a=0, b=1)
-abline(lm(Straight_RF$predicted.oob ~ Env.table$FST_lin), col="red")
+abline(lm(Straight_RF$predicted.oob ~ Env.table$CSE), col="red")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(R,3))), cex=0.7)
 dev.off()
 
@@ -273,7 +273,7 @@ cp ${OUT_TXT}/prediction_msk0.tif ${OUT_TXT}/prediction_msk.tif
 awk -F "," '{ if(NR>1) print $1 , $(NF-5),  $(NF-6) ,  $(NF-3),  $(NF-4) }' ${OUT_TXT}/FST_list_NAmRF3_all.csv | uniq > ${OUT_TXT}/FST_line_NAmRF3_StartStopAll.txt
 #awk -F "," '{ if(NR>1) print $1 , $(NF-5),  $(NF-6) ,  $(NF-3),  $(NF-4) }' ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv | uniq > ${OUT_TXT}_${point}/FST_line_NAmRF3_StartStopTrai$point.txt
 
-for ITER in $(seq 1 2 ) ; do  
+for ITER in $(seq 1 10 ) ; do  
 export ITER=$ITER
 
 echo Start Iteration $ITER  GRASS 
@@ -289,6 +289,13 @@ INDEX=$1
 r.cost -n -k  input=prediction  output=cost$INDEX  outdir=dir$INDEX    start_coordinates=$2,$3  memory=200  --o --q
 g.remove -f  type=raster name=cost$INDEX  2>/dev/null
 r.path input=dir$INDEX  raster_path=least_path$INDEX start_coordinates=$4,$5 --o --q 
+
+if [  "$2 $3" = "-98.4954 29.4112"  ] || [  "$4 $5" = "-98.4954 29.4112"  ] ; then
+
+r.out.gdal --o -f -c -m createopt="COMPRESS=DEFLATE,ZLEVEL=9" nodata=-9999 type=Int32 format=GTiff input=least_path$INDEX  output=${OUT_TXT}/least_path${INDEX}_iter$ITER.tif
+
+fi
+
 g.remove -f  type=raster name=dir$INDEX  2>/dev/null
 
 echo $INDEX","$(for rast in arid access prec meantemp humandensity friction mintemp Needleleaf EvBroadleaf DecBroadleaf MiscTrees Shrubs Herb Crop Flood Urban Snow Barren Water Slope Altitude PET DailyTempRange maxtemp AnnualTempRange precwet precdry GPP ; do  r.univar -t map=$rast    zones=least_path$INDEX separator=comma 2>/dev/null | awk  -F , \' { if (NR==2)  printf  ("%s,", $8) } \' ; done )$(r.univar -t map=kernel100 zones=least_path$INDEX separator=comma 2>/dev/null | awk  -F , \' { if (NR==2)  printf  ("%s\\n",$8 ) } \') 
