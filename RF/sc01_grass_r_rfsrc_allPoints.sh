@@ -256,6 +256,9 @@ abline(lm(Straight_RF$predicted.oob ~ Env.table$CSE), col="red")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(R,3))), cex=0.7)
 dev.off()
 
+StraightVec = Straight_RF$predicted.oob
+write.csv(StraightVec, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/StraightVec", row.names = FALSE)
+
 writeRaster(pred.cond, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/prediction.tif", options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 
 EOF
@@ -439,6 +442,10 @@ abline(a=0, b=1)
 abline(lm(LeastPath_RF$predicted.oob ~ Env.table$CSE), col="red")
 legend("bottomright", legend=c(paste0("Pearson correlation = ", round(R,3))), cex=0.7)
 dev.off()  
+
+
+LCPVec = LeastPath_RF$predicted.oob
+write.csv(LCPVec, paste0("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/LCPVec", ITER, ".csv"))
 
 writeRaster(pred.cond, "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/TrainingTestingRfsrc_all/prediction.tif", options=c("COMPRESS=DEFLATE","ZLEVEL=9") , format="GTiff", overwrite=TRUE  )
 EOF

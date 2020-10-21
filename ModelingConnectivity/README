@@ -1,0 +1,17 @@
+Mapping landscape connectivity in Aedes aegypti: a machine learning approach to integrate genetic and environmental data
+
+Summary:
+Our goal is to combine the advantages of a machine learning framework and an iterative optimization process to integrate genetic and environmental (e.g. climate, land cover, human infrastructure) data. Here we present an iterative machine learning approach to integrate genetic and environmental data and map landscape connectivity. We provide a means to validate this method through leave-one-out cross-validation.
+
+Software and prerequisites:
+A computing cluster, significant memory (~80G), and parallelization are required to meet the computing demands of this model. Programs required include R, GRASS, GDAL, PKTOOLs. Various R packages are required (especially "raster" and "randomForestSRC"); the specific packages required are listed in each script. These scripts are meant to provide full transparency about scripting procedure, and they will need significant updating to be run with new genetic and environmental data. Familiarity with editing environmental data is required.
+
+Scripts and materials included:
+
+GeneticDistanceInput.csv: This file contains a list of population pairs, their latitudes and longitudes, and the genetic distance (linearized FST and Cavalli-Sforza Edwards distance) for each pair. The data can be replaced with the user's genetic data.
+
+sc00_prepare_rasterstack.sh: This script was used to prepare the environmental rasters for processing by the RF model scripts. The directories and rasters can be updated to point to the user's environmental data of interest.
+
+sc01_LOOCV.sh: This script was used to perform the leave-one-out cross-validation (LOOCV) for the iterative RF model using CSE as a genetic distance. See the manuscript and detailed script annotations for explanation of the scripting procedure.
+
+sc02_allPoints.sh: This script was used to run the iterative RF model with the full genetic dataset. After confirming this model did not overfit the data, we considered it as a summary of the final results, more easy to interpret than the LOOCV ensemble results. As in the case of the LOOCV, we refer the user to the manuscript and detailed script annotations for explanation of the scripting procedure.
