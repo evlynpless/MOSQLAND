@@ -69,54 +69,6 @@ min.tempI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfri
 min.temp <- min.tempI*1
 proj4string(min.temp) <- crs.geo
 
-NeedleleafI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_1_EAfrClip.tif")
-Needleleaf = NeedleleafI*1
-proj4string(Needleleaf) <- crs.geo
-
-EvBroadleafI  = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_2_EAfrClip.tif")
-EvBroadleaf = EvBroadleafI*1
-proj4string(EvBroadleaf) <- crs.geo
-
-DecBroadleafI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_3_EAfrClip.tif")
-DecBroadleaf = DecBroadleafI*1
-proj4string(DecBroadleaf) <- crs.geo
-
-MiscTreesI =  raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_4_EAfrClip.tif")
-MiscTrees = MiscTreesI*1
-proj4string(MiscTrees) <- crs.geo
-
-ShrubsI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_5_EAfrClip.tif")
-Shrubs = ShrubsI*1
-proj4string(Shrubs) <- crs.geo
-
-HerbI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_6_EAfrClip.tif")
-Herb = HerbI*1
-proj4string(Herb) <- crs.geo
-
-CropI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_7_EAfrClip.tif")
-Crop <- CropI*1
-proj4string(Crop) <- crs.geo
-
-FloodI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_8_EAfrClip.tif")
-Flood = FloodI*1
-proj4string(Flood) <- crs.geo
-
-UrbanI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_9_EAfrClip.tif")
-Urban <- UrbanI*1
-proj4string(Urban) <- crs.geo
-
-#SnowI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_10_EAfrClip.tif")
-#Snow = SnowI*1
-#proj4string(Snow) <- crs.geo
-
-BarrenI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_11_EAfrClip.tif")
-Barren = BarrenI*1
-proj4string(Barren) <- crs.geo
-
-WaterI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/consensus_full_class_12_EAfrClip.tif")
-Water = WaterI*1
-proj4string(Water) <- crs.geo
-
 SlopeI = raster("/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_clips/slope_1KMmedian_MERIT_EAfrClip.tif")
 Slope = SlopeI*1
 proj4string(Slope) <- crs.geo
@@ -158,7 +110,7 @@ kernel100 = kernel100I*1
 proj4string(kernel100) <- crs.geo
 
 #Create raster stack named env
-env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Needleleaf, EvBroadleaf, DecBroadleaf, MiscTrees, Shrubs, Herb, Crop, Flood, Urban, Barren, Water, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel100) 
+env=stack(arid, access, prec, mean.temp, human.density, friction, min.temp, Slope, Altitude, PET, DailyTempRange, max.temp, AnnualTempRange, prec.wet, prec.dry, GPP, kernel100) 
 
 #Rename each raster in env so they can be referenced later
 names(env) [1] <- "arid"
@@ -168,27 +120,16 @@ names(env) [4] <- "mean.temp"
 names(env) [5] <- "human.density"
 names(env) [6] <- "friction"
 names(env) [7] <- "min.temp"
-names(env) [8] <- "Needleleaf"
-names(env) [9] <- "EvBroadleaf"
-names(env) [10] <- "DecBroadleaf"
-names(env) [11] <- "MiscTrees"
-names(env) [12] <- "Shrubs"
-names(env) [13] <- "Herb"
-names(env) [14] <- "Crop"
-names(env) [15] <- "Flood"
-names(env) [16] <- "Urban"
-names(env) [17] <- "Barren"
-names(env) [18] <- "Water"
-names(env) [19] <- "Slope"
-names(env) [20] <- "Altitude"
-names(env) [21] <- "PET"
-names(env) [22] <- "DailyTempRange"
-names(env) [23] <- "max.temp"
-names(env) [24] <- "AnnualTempRange"
-names(env) [25] <- "prec.wet"
-names(env) [26] <- "prec.dry"
-names(env) [27] <- "GPP"
-names(env) [28] <- "kernel100"
+names(env) [8] <- "Slope"
+names(env) [9] <- "Altitude"
+names(env) [10] <- "PET"
+names(env) [11] <- "DailyTempRange"
+names(env) [12] <- "max.temp"
+names(env) [13] <- "AnnualTempRange"
+names(env) [14] <- "prec.wet"
+names(env) [15] <- "prec.dry"
+names(env) [16] <- "GPP"
+names(env) [17] <- "kernel100"
 
 print("raster stack done")
 
@@ -200,18 +141,6 @@ value.raster$mean.temp = getValues(mean.temp)
 value.raster$human.density = getValues(human.density)
 value.raster$friction = getValues(friction)
 value.raster$min.temp = getValues(min.temp)
-value.raster$Needleleaf = getValues(Needleleaf)
-value.raster$EvBroadleaf = getValues(EvBroadleaf)
-value.raster$DecBroadleaf = getValues(DecBroadleaf)
-value.raster$MiscTrees = getValues(MiscTrees)
-value.raster$Shrubs = getValues(Shrubs)
-value.raster$Herb = getValues(Herb)
-value.raster$Crop = getValues(Crop)
-value.raster$Flood = getValues(Flood)
-value.raster$Urban = getValues(Urban)
-#value.raster$Snow = getValues(Snow)
-value.raster$Barren = getValues(Barren)
-value.raster$Water = getValues(Water)
 value.raster$Slope = getValues(Slope)
 value.raster$Altitude = getValues(Altitude)
 value.raster$PET = getValues(PET)
@@ -222,6 +151,6 @@ value.raster$prec.wet = getValues(prec.wet)
 value.raster$prec.dry = getValues(prec.dry)
 value.raster$GPP = getValues(GPP)
 value.raster$kernel100 = getValues(kernel100)
-save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_output/rasterstack.RData")
+save.image(file = "/project/fas/powell/esp38/dataproces/MOSQLAND/consland/EAfrica_output/rasterstack_noLC.RData")
 
 EOF
