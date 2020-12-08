@@ -7,7 +7,7 @@
 #SBATCH -e /gpfs/scratch60/fas/powell/esp38/stderr/sc01_grass_r_rfsrc_LTOCV.sh.%A_%a.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=evlyn.pless@yale.edu
-#SBATCH --array=1-4:2
+#SBATCH --array=1-38:2
 #SBATCH --mem=80G
 
 ####### sbatch  /home/fas/powell/esp38/scripts/MOSQLAND/RF/sc01_grass_r_rfsrc.sh
@@ -38,8 +38,7 @@ export point=$SLURM_ARRAY_TASK_ID
 echo "index,V1,V2,locality1,locality2,lat1,long1,lat2,long2,FST_lin,CSE,Resd" > ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv
 awk -v point=$point  -F ","  '{ if ($2==point || $3==point ) print }' $IN_TXT/FST_list_NAmRF4.csv  >> ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv
 awk -v point=$point  -F ","  '{ if ($2==(point+1) || $3==(point+1) ) print }' $IN_TXT/FST_list_NAmRF4.csv  >> ${OUT_TXT}_${point}/FST_list_NAmRF3_Test$point.csv
-awk -v point=$point  -F ","  '{ if ($2!=point && $3!=point ) print }' $IN_TXT/FST_list_NAmRF4.csv  > ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv
-awk -v point=$point  -F ","  '{ if ($2!=(point+1) && $3!=(point+1) ) print }' $IN_TXT/FST_list_NAmRF4.csv  >> ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv
+awk -v point=$point  -F ","  '{ if ($2!=point && $2!=(point+1) && $3!=point && 3!=(point+1) ) print }' $IN_TXT/FST_list_NAmRF4.csv  > ${OUT_TXT}_${point}/FST_list_NAmRF3_Trai$point.csv
 
 #### create the start-end points for each line
 
