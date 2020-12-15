@@ -35,7 +35,7 @@ export point=$SLURM_ARRAY_TASK_ID
 
 ###  spliting in training and testing. Select only one point (all the pairwise from that point)  for the testing
 
-awk -v point=$point  -F ","  '{ if ( 1 > 0 ) print }' $IN_TXT/EAfr_FST_list.csv  > ${OUT_TXT}/EAfr_FST_list2.csv
+awk -v point=$point  -F ","  '{ if ( 1 > 0 ) print }' $IN_TXT/EAfr_FST_list_reduced.csv  > ${OUT_TXT}/EAfr_FST_list2.csv
 
 #### create the start-end points for each line
 
